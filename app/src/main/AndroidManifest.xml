@@ -2,6 +2,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+
+    <uses-permission android:name="android.permission.NFC" />
+    <uses-feature android:name="android.hardware.nfc" android:required="true" />
+
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -12,6 +18,14 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.NFCTask"
         tools:targetApi="31">
+        <service
+            android:name=".TaskService"
+            android:foregroundServiceType="specialUse"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="TODO">
+        </service>
+
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -22,6 +36,20 @@
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.nfc.action.NDEF_DISCOVERED" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="application/vnd.com.example.nfc_task" />
+            </intent-filter>
+
+<!--            <intent-filter>-->
+<!--                <action android:name="android.nfc.action.TECH_DISCOVERED"/>-->
+<!--            </intent-filter>-->
+
+<!--            <meta-data-->
+<!--                android:name="android.nfc.action.TECH_DISCOVERED"-->
+<!--                android:resource="@xml/nfc_tech_filter" />-->
         </activity>
     </application>
 

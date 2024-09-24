@@ -28,7 +28,6 @@ class NfcManager(private val context: Context) {
 
     private var writeMode = false // TODO: Make use of writeMode
     var myTag: Tag? = null
-    private var msg: String? = null
 
     fun isNfcIntent(action: String): Boolean {
         return NfcAdapter.ACTION_TAG_DISCOVERED == action || NfcAdapter.ACTION_TECH_DISCOVERED == action || NfcAdapter.ACTION_NDEF_DISCOVERED == action
@@ -39,23 +38,26 @@ class NfcManager(private val context: Context) {
     }
 
     // Read message from NFC Intent
-    fun readFromIntent(intent: Intent) {
+    fun readFromIntent(intent: Intent): String? {
+        var msg: String? = null
         intent.getParcelableArrayExtra(NfcAdapter.EXTRA_NDEF_MESSAGES)?.also { rawMsgs ->
             (rawMsgs[0] as NdefMessage).apply {
                 // Record 0 contains the MIME type, record 1 is the AAR, if present
-                msg = String(records[0].payload).split(' ')[0]
+                msg = String(records[0].payload)
+//                msg = String(records[0].payload).split(' ')[0]
             }
         }
+        return msg
     }
 
     private fun createNdefMessage(text: String): NdefMessage {
         return NdefMessage(
             arrayOf(
                 createMime(
-                    "application/vnd.com.example.android.architecture.blueprints.main",
+                    "application/vnd.com.example.nfc_task",
                     text.toByteArray()
                 ),
-                NdefRecord.createApplicationRecord("com.example.android.architecture.blueprints.main")
+                NdefRecord.createApplicationRecord("com.example.nfc_task")
             )
         )
     }
