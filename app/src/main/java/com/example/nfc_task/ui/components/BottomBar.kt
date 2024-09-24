@@ -223,7 +223,7 @@ private fun NavBtn(
         if (selected) {
             Spacer(modifier.width(7.dp))
             Text(
-                text = text, style = MaterialTheme.typography.bodyLarge
+                text = text, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold
             )
         }
 

@@ -1,18 +1,25 @@
 package com.example.nfc_task.ui.components
 
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -29,8 +36,15 @@ val screenItems = listOf(
     HomeScreen.TaskList, HomeScreen.Statistics, HomeScreen.Profile
 )
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskAppHome() {
+
+    var showBottomSheet by remember { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = false,
+    )
+
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
@@ -90,6 +104,18 @@ fun TaskAppHome() {
                 composable(HomeScreen.Statistics.route) { }
                 composable(HomeScreen.Profile.route) { }
             }
+        }
+    }
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            shape = MaterialTheme.shapes.large,
+            containerColor = MaterialTheme.colorScheme.background,
+            modifier = Modifier.fillMaxHeight(),
+            sheetState = sheetState,
+            onDismissRequest = { showBottomSheet = false }
+        ) {
+
         }
     }
 }

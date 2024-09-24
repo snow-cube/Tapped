@@ -5,7 +5,7 @@
     <string name="bottom_statistics">统计</string>
     <string name="bottom_profile">个人</string>
 
-    <string name="title_task_list">任务列表</string>
+    <string name="title_task_list">任务</string>
     <string name="title_statistics">统计数据</string>
     <string name="title_profile">个人账户</string>
 </resources>
