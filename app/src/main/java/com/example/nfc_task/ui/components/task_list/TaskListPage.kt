@@ -2,6 +2,7 @@ package com.example.nfc_task.ui.components.task_list
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -45,7 +46,8 @@ enum class TaskListEnv() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TaskListPage(
-    onDrawerBtnClick: () -> Unit
+    onDrawerBtnClick: () -> Unit,
+    onTaskItemClick: () -> Unit
 ) {
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -95,10 +97,10 @@ fun TaskListPage(
                 .padding(innerPadding)
         ) {
             composable(route = TaskListEnv.Personal.name) {
-                PersonalTaskList()
+                PersonalTaskList(onTaskItemClick = onTaskItemClick)
             }
             composable(route = TaskListEnv.Team.name) {
-                TeamTaskList()
+                TeamTaskList(onTaskItemClick = onTaskItemClick)
             }
         }
     }
@@ -114,7 +116,7 @@ private fun TextSwitch(
         color = Color(0x0C000000),
         shape = MaterialTheme.shapes.small,
         modifier = Modifier
-//                    .width(230.dp)
+            .width(140.dp)
             .height(40.dp)
     ) {
         Row(
@@ -123,20 +125,22 @@ private fun TextSwitch(
         ) {
             TextSwitchBtn(
                 selected = TaskListEnv.Personal.name == currentDestinationRoute,
-                "个人"
-            ) { onSwitchBtnClick(TaskListEnv.Personal.name) }
+                "个人",
+                onClick = { onSwitchBtnClick(TaskListEnv.Personal.name) },
+                modifier = Modifier.weight(1f).fillMaxWidth()
+            )
             TextSwitchBtn(
                 selected = TaskListEnv.Team.name == currentDestinationRoute,
                 "小组",
-                onClick = { onSwitchBtnClick(TaskListEnv.Team.name) }
+                onClick = { onSwitchBtnClick(TaskListEnv.Team.name) },
+                Modifier.weight(1f).fillMaxWidth()
             )
-
         }
     }
 }
 
 @Composable
-private fun TextSwitchBtn(selected: Boolean, text: String, onClick: () -> Unit) {
+private fun TextSwitchBtn(selected: Boolean, text: String, onClick: () -> Unit, modifier: Modifier) {
     Button(
         onClick = onClick,
         colors = ButtonColors(
@@ -147,8 +151,7 @@ private fun TextSwitchBtn(selected: Boolean, text: String, onClick: () -> Unit) 
         ),
         shape = MaterialTheme.shapes.small,
         contentPadding = PaddingValues(0.dp),
-        modifier = Modifier
-            .width(70.dp)
+        modifier = modifier
     ) {
         Text(text, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
     }
@@ -159,7 +162,8 @@ private fun TextSwitchBtn(selected: Boolean, text: String, onClick: () -> Unit) 
 fun TaskListPagePreview() {
     NFCTaskTheme {
         TaskListPage(
-            onDrawerBtnClick = {}
+            onDrawerBtnClick = {},
+            onTaskItemClick = {}
         )
     }
 }

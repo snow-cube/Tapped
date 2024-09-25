@@ -1,9 +1,6 @@
 package com.example.nfc_task.ui.components
 
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -15,17 +12,37 @@ enum class TaskAppScreen {
 }
 
 @Composable
-fun TaskApp() {
+fun TaskApp(
+    hasTaskProcess: Boolean,
+    isRunning: Boolean,
+    currentTaskTime: Int,
+    onStartNewTask: () -> Unit,
+    onFinishTask: () -> Unit,
+    onTerminateTask: () -> Unit,
+    onPauseTask: () -> Unit,
+    onContinueTask: () -> Unit,
+) {
     val taskAppNavController = rememberNavController()
     NavHost(
         navController = taskAppNavController,
         startDestination = TaskAppScreen.Home.name
     ) {
         composable(route = TaskAppScreen.Home.name) {
-            TaskAppHome()
+            TaskAppHome(onTaskItemClick = {
+                taskAppNavController.navigate(TaskAppScreen.TaskDetail.name)
+            })
         }
         composable(route = TaskAppScreen.TaskDetail.name) {
-            TaskDetail()
+            TaskDetail(
+                hasTaskProcess = hasTaskProcess,
+                isRunning = isRunning,
+                currentTaskTime = currentTaskTime,
+                onStartNewTask = onStartNewTask,
+                onContinueTask = onContinueTask,
+                onFinishTask = onFinishTask,
+                onTerminateTask = onTerminateTask,
+                onPauseTask = onPauseTask
+            )
         }
         composable(route = TaskAppScreen.Login.name) {
             LoginPage()
@@ -39,7 +56,4 @@ fun LoginPage() {
     TODO("Not yet implemented")
 }
 
-@Composable
-fun TaskDetail() {
-    TODO("Not yet implemented")
-}
+

@@ -17,7 +17,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
@@ -43,15 +42,14 @@ import androidx.compose.ui.unit.sp
 import com.example.nfc_task.ui.theme.NFCTaskTheme
 import com.example.nfc_task.ui.theme.darkGreen
 import com.example.nfc_task.ui.theme.darkGrey
-import com.example.nfc_task.ui.theme.successColor
-import com.example.nfc_task.ui.theme.warningColor
 
 @Composable
 fun BottomBar(
     screenItems: List<HomeScreen>,
     currentScreenRoute: String,
     onItemClick: (targetRoute: String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAddTaskBtnClick: () -> Unit
 ) {
     Column(
         modifier.padding(
@@ -100,7 +98,7 @@ fun BottomBar(
 
             FloatingActionButton(
                 shape = MaterialTheme.shapes.extraLarge,
-                onClick = { },
+                onClick = onAddTaskBtnClick,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 containerColor = MaterialTheme.colorScheme.primary,
                 modifier = modifier
@@ -142,14 +140,14 @@ private fun BottomTaskController(modifier: Modifier) {
         ) {
             Column(modifier.width(230.dp)) {
                 Text(
-                    "NFC · 复习计算机体系结构",
+                    "NFC · 测试任务 1",
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     color = darkGrey
                 )
                 HorizontalDivider()
                 Text(
-                    "进行中 | 24:04",
+                    "进行中 | 09:17",
                     color = darkGreen,
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
@@ -187,7 +185,6 @@ private fun BottomTaskController(modifier: Modifier) {
                 }
             }
         }
-
     }
 }
 
@@ -237,6 +234,8 @@ fun BottomNavigationBarPreview() {
     NFCTaskTheme {
         BottomBar(screenItems = listOf(
             HomeScreen.TaskList, HomeScreen.Statistics, HomeScreen.Profile
-        ), currentScreenRoute = "statistics", onItemClick = {})
+        ), currentScreenRoute = "statistics", onItemClick = {}, onAddTaskBtnClick = {
+
+        })
     }
 }

@@ -11,6 +11,7 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -38,7 +39,7 @@ val screenItems = listOf(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskAppHome() {
+fun TaskAppHome(onTaskItemClick: () -> Unit) {
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(
@@ -48,19 +49,16 @@ fun TaskAppHome() {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            ModalDrawerSheet {
-                Text("Drawer title", modifier = Modifier.padding(16.dp))
-                HorizontalDivider()
-                NavigationDrawerItem(label = { Text(text = "Drawer Item") },
-                    selected = false,
-                    onClick = { /*TODO*/ })
-                // ...other drawer items
-            }
+    ModalNavigationDrawer(drawerState = drawerState, drawerContent = {
+        ModalDrawerSheet {
+            Text("Drawer title", modifier = Modifier.padding(16.dp))
+            HorizontalDivider()
+            NavigationDrawerItem(label = { Text(text = "Drawer Item") },
+                selected = false,
+                onClick = { /*TODO*/ })
+            // ...other drawer items
         }
-    ) {
+    }) {
         // Screen content
         val navController = rememberNavController()
         val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -83,7 +81,8 @@ fun TaskAppHome() {
                         // Restore state when reselecting a previously selected item
                         restoreState = true
                     }
-                })
+                },
+                onAddTaskBtnClick = { showBottomSheet = true })
         }) { innerPadding ->
             NavHost(
                 navController,
@@ -98,7 +97,8 @@ fun TaskAppHome() {
                                     if (isClosed) open() else close()
                                 }
                             }
-                        }
+                        },
+                        onTaskItemClick = onTaskItemClick
                     )
                 }
                 composable(HomeScreen.Statistics.route) { }
@@ -108,14 +108,14 @@ fun TaskAppHome() {
     }
 
     if (showBottomSheet) {
-        ModalBottomSheet(
-            shape = MaterialTheme.shapes.large,
+        ModalBottomSheet(shape = MaterialTheme.shapes.large,
             containerColor = MaterialTheme.colorScheme.background,
             modifier = Modifier.fillMaxHeight(),
             sheetState = sheetState,
-            onDismissRequest = { showBottomSheet = false }
-        ) {
-
+            onDismissRequest = { showBottomSheet = false }) {
+            AddTaskComponent(
+                expanded = sheetState.targetValue == SheetValue.Expanded
+            )
         }
     }
 }
@@ -124,6 +124,6 @@ fun TaskAppHome() {
 @Composable
 fun TaskAppPreview() {
     NFCTaskTheme {
-        TaskAppHome()
+        TaskAppHome(onTaskItemClick = {})
     }
 }

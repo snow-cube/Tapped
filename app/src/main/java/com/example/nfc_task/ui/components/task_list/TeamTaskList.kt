@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardColors
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.HorizontalDivider
@@ -21,13 +19,74 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.nfc_task.data.Task
 import com.example.nfc_task.ui.theme.NFCTaskTheme
 
+
+val folders2 = listOf(
+    listOf(
+        Task(
+            inNfcManner = false,
+            isPeriod = false,
+            isRepeat = false,
+            taskName = "小组任务 1",
+            taskTime = "9/17 18:30",
+        ),
+        Task(
+            inNfcManner = false,
+            isPeriod = false,
+            isRepeat = false,
+            taskName = "测试任务",
+            taskTime = "9/20 20:00",
+        ),
+
+        ),
+    listOf(
+        Task(
+            inNfcManner = true,
+            isPeriod = false,
+            isRepeat = false,
+            taskName = "Task name example",
+            taskTime = "9/17 15:00",
+        ),
+    ),
+    listOf(
+        Task(
+            inNfcManner = false,
+            isPeriod = false,
+            isRepeat = false,
+            taskName = "任务不重复一次性",
+            taskTime = "9/17 18:20",
+        ),
+        Task(
+            inNfcManner = true,
+            isPeriod = false,
+            isRepeat = false,
+            taskName = "测试任务2一次性",
+            taskTime = "9/18 18:30",
+        ),
+        Task(
+            inNfcManner = true,
+            isPeriod = true,
+            isRepeat = true,
+            taskName = "测试任务重复执行",
+            taskTime = "9/17 21:00 - 21:20",
+        ),
+        Task(
+            inNfcManner = false,
+            isPeriod = false,
+            isRepeat = false,
+            taskName = "测试任务3非NFC",
+            taskTime = "9/20 20:00",
+        )
+    )
+)
+
 @Composable
-fun TeamTaskList() {
+fun TeamTaskList(onTaskItemClick: () -> Unit) {
     Column() {
         TeamInfoBoard()
-        TaskListBody()
+        TaskListBody(onTaskItemClick = onTaskItemClick, folders = folders2)
     }
 }
 
@@ -79,6 +138,6 @@ fun TeamInfoBoard() {
 @Composable
 fun TeamTaskListPreview() {
     NFCTaskTheme {
-        TeamTaskList()
+        TeamTaskList(onTaskItemClick = {})
     }
 }

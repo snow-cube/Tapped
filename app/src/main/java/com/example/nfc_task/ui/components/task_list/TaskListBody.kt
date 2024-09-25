@@ -32,14 +32,14 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.nfc_task.data.Task
 import com.example.nfc_task.ui.theme.NFCTaskTheme
-import com.example.nfc_task.ui.theme.StateColor
 import com.example.nfc_task.ui.theme.ThemeColor
 import com.example.nfc_task.ui.theme.darkGrey
 import com.example.nfc_task.ui.theme.mediumGrey
 
 @Composable
-fun TaskListBody() {
+fun TaskListBody(onTaskItemClick: () -> Unit, folders: List<List<Task>>) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
@@ -52,13 +52,28 @@ fun TaskListBody() {
             .fillMaxWidth()
     ) {
         item {
-            TaskFolder(themeColor = ThemeColor.blue.color, folderName = "任务分组 1")
+            TaskFolder(
+                folderName = "任务分组 1",
+                themeColor = ThemeColor.blue.color,
+                onTaskItemClick = onTaskItemClick,
+                tasks = folders[0]
+            )
         }
         item {
-            TaskFolder(themeColor = ThemeColor.yellow.color, folderName = "Folder 2")
+            TaskFolder(
+                folderName = "Folder 2",
+                themeColor = ThemeColor.yellow.color,
+                onTaskItemClick = onTaskItemClick,
+                tasks = folders[1]
+            )
         }
         item {
-            TaskFolder(themeColor = ThemeColor.green.color, folderName = "Test Folder")
+            TaskFolder(
+                folderName = "Test Folder",
+                themeColor = ThemeColor.green.color,
+                onTaskItemClick = onTaskItemClick,
+                tasks = folders[2]
+            )
         }
     }
 }
@@ -66,9 +81,11 @@ fun TaskListBody() {
 /* TODO: Maybe later it will be passed to folder component the folder object directly rather than
  separate properties */
 @Composable
-fun TaskFolder(
+private fun TaskFolder(
     folderName: String,
-    themeColor: Color
+    themeColor: Color,
+    onTaskItemClick: () -> Unit,
+    tasks: List<Task>
 ) {
     var folded by remember { mutableStateOf(false) }
 
@@ -129,39 +146,12 @@ fun TaskFolder(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
                     modifier = Modifier.padding(10.dp)
                 ) {
-
-                    TaskItem(
-                        inNfcManner = true,
-                        isPeriod = true,
-                        isRepeat = false,
-                        taskName = "测试任务1",
-                        taskTime = "9/17 19:00 - 19:20",
-                        stateColor = StateColor.unsafe.color
-                    )
-                    TaskItem(
-                        inNfcManner = true,
-                        isPeriod = false,
-                        isRepeat = false,
-                        taskName = "测试任务2一次性",
-                        taskTime = "9/18 18:30",
-                        stateColor = StateColor.normal.color
-                    )
-                    TaskItem(
-                        inNfcManner = true,
-                        isPeriod = true,
-                        isRepeat = true,
-                        taskName = "测试任务重复执行",
-                        taskTime = "9/17 21:00 - 21:20",
-                        stateColor = StateColor.warning.color
-                    )
-                    TaskItem(
-                        inNfcManner = false,
-                        isPeriod = false,
-                        isRepeat = false,
-                        taskName = "测试任务3非NFC",
-                        taskTime = "9/20 20:00",
-                        stateColor = StateColor.safe.color
-                    )
+                    tasks.forEach() {
+                        TaskItem(
+                            task = it,
+                            onTaskItemClick = onTaskItemClick
+                        )
+                    }
                 }
             }
         }
@@ -169,25 +159,22 @@ fun TaskFolder(
 }
 
 @Composable
-fun TaskItem(
-    inNfcManner: Boolean = false,
-    isPeriod: Boolean = false,
-    isRepeat: Boolean = false,
-    taskName: String,
-    taskTime: String,
-    stateColor: Color
+private fun TaskItem(
+    onTaskItemClick: () -> Unit,
+    task: Task
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Surface(
-            color = stateColor,
+            color = task.stateColor,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
                 .width(5.dp)
                 .height(60.dp)
         ) { }
         Surface(
+            onClick = onTaskItemClick,
             color = Color(0x0A000000),
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
@@ -209,22 +196,22 @@ fun TaskItem(
                         .fillMaxWidth()
                 ) {
                     Text(
-                        "${if (inNfcManner) "NFC" else "普通"}" +
-                                " | ${if (isPeriod) "持续" else "即时"}" +
-                                "${if (isRepeat) " | 重复" else ""}",
+                        "${if (task.inNfcManner) "NFC" else "普通"}" +
+                                " | ${if (task.isPeriod) "持续" else "即时"}" +
+                                "${if (task.isRepeat) " | 重复" else ""}",
                         color = mediumGrey,
                         style = MaterialTheme.typography.bodyMedium
                     )
 
                     Text(
-                        taskTime,
+                        task.taskTime,
                         color = mediumGrey,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
 //                HorizontalDivider()
                 Text(
-                    taskName,
+                    task.taskName,
                     lineHeight = 30.sp,
                     color = darkGrey,
                     style = MaterialTheme.typography.titleMedium,
@@ -239,6 +226,6 @@ fun TaskItem(
 @Composable
 fun TaskListBodyPreview() {
     NFCTaskTheme {
-        TaskListBody()
+        TaskListBody(onTaskItemClick = {}, folders = folders)
     }
 }
