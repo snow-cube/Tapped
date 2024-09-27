@@ -181,8 +181,11 @@ class TaskService : Service() {
         hasTaskProcess = false
     }
 
-    fun finishTaskProcess() {
+    // TODO: 后续可返回更详细的运行结果信息
+    fun finishTaskProcess(): Int {
+        val runningTime = getCurrentTaskTime()
         stopTimer()
         hasTaskProcess = false
+        return runningTime
     }
 }

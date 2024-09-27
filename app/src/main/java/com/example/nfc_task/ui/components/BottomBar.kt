@@ -1,5 +1,6 @@
 package com.example.nfc_task.ui.components
 
+import android.text.format.DateUtils
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -34,14 +35,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.nfc_task.R
 import com.example.nfc_task.ui.theme.NFCTaskTheme
 import com.example.nfc_task.ui.theme.darkGreen
 import com.example.nfc_task.ui.theme.darkGrey
+import com.example.nfc_task.ui.theme.darkYellow
 
 @Composable
 fun BottomBar(
@@ -49,16 +53,34 @@ fun BottomBar(
     currentScreenRoute: String,
     onItemClick: (targetRoute: String) -> Unit,
     modifier: Modifier = Modifier,
-    onAddTaskBtnClick: () -> Unit
+    onAddTaskBtnClick: () -> Unit,
+    hasTaskProcess: Boolean = false,
+    isRunning: Boolean = false,
+    currentTaskTime: Int = 0,
+    onFinishTask: () -> Unit,
+    onTerminateTask: () -> Unit,
+    onPauseTask: () -> Unit,
+    onContinueTask: () -> Unit,
+    onBottomTaskControllerClick: () -> Unit
 ) {
     Column(
-        modifier.padding(
-            top = 5.dp, start = 10.dp, end = 10.dp, bottom = 25.dp
+        verticalArrangement = Arrangement.spacedBy(7.dp),
+        modifier = modifier.padding(
+            top = 9.dp, start = 10.dp, end = 10.dp, bottom = 20.dp
         )
     ) {
-        BottomTaskController(modifier)
-
-        Spacer(modifier.height(7.dp))
+        if (hasTaskProcess) {
+            BottomTaskController(
+                modifier = modifier,
+                isRunning = isRunning,
+                currentTaskTime = currentTaskTime,
+                onFinishTask = onFinishTask,
+                onTerminateTask = onTerminateTask,
+                onPauseTask = onPauseTask,
+                onContinueTask = onContinueTask,
+                onClick = onBottomTaskControllerClick
+            )
+        }
 
         Row(
             horizontalArrangement = Arrangement.SpaceBetween, modifier = modifier.fillMaxWidth()
@@ -88,7 +110,7 @@ fun BottomBar(
                         NavBtn(
                             text = stringResource(screen.resourceId),
                             icon = screen.icon,
-                            selected = currentScreenRoute == screen.route
+                            selected = currentScreenRoute == screen.route || currentScreenRoute in screen.includedRoutes
                         ) {
                             onItemClick(screen.route)
                         }
@@ -111,14 +133,26 @@ fun BottomBar(
                 )
             }
         }
-
-//        Spacer(modifier.height(20.dp))
     }
 }
 
 @Composable
-private fun BottomTaskController(modifier: Modifier) {
+private fun BottomTaskController(
+    modifier: Modifier,
+    isRunning: Boolean,
+    currentTaskTime: Int,
+    onFinishTask: () -> Unit,
+    onTerminateTask: () -> Unit,
+    onPauseTask: () -> Unit,
+    onContinueTask: () -> Unit,
+    onClick: () -> Unit
+) {
+    val taskStateText = if (isRunning) "进行中" else "暂停中"
+    val formattedTime = DateUtils.formatElapsedTime(currentTaskTime.toLong())
+    val stateColor = if (isRunning) darkGreen else darkYellow
+
     Surface(
+        onClick = onClick,
         shape = MaterialTheme.shapes.medium,
         color = MaterialTheme.colorScheme.tertiaryContainer,
         border = BorderStroke(
@@ -146,17 +180,20 @@ private fun BottomTaskController(modifier: Modifier) {
                     color = darkGrey
                 )
                 HorizontalDivider()
-                Text(
-                    "进行中 | 09:17",
-                    color = darkGreen,
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 45.sp
-                )
+                Row {
+                    Text(
+                        "$taskStateText | $formattedTime",
+                        color = stateColor,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 45.sp
+                    )
+                }
             }
             Row() {
                 IconButton(
-                    onClick = { }, colors = IconButtonColors(
+                    onClick = if (isRunning) onPauseTask else onContinueTask,
+                    colors = IconButtonColors(
                         containerColor = Color(0x0C000000),
                         contentColor = MaterialTheme.colorScheme.primary,
                         disabledContainerColor = Color(0x0C000000),
@@ -164,13 +201,16 @@ private fun BottomTaskController(modifier: Modifier) {
                     )
                 ) {
                     Icon(
-                        imageVector = Icons.Filled.PlayArrow,
+                        imageVector = if (isRunning)
+                            ImageVector.vectorResource(R.drawable.baseline_pause_24) else
+                            Icons.Filled.PlayArrow,
                         contentDescription = "Localized description",
                         modifier = modifier.size(30.dp)
                     )
                 }
                 IconButton(
-                    onClick = { }, colors = IconButtonColors(
+                    onClick = onFinishTask, // 若为 NFC 任务，应为终止
+                    colors = IconButtonColors(
                         containerColor = Color(0x0C000000),
                         contentColor = MaterialTheme.colorScheme.primary,
                         disabledContainerColor = Color(0x0C000000),
@@ -220,7 +260,9 @@ private fun NavBtn(
         if (selected) {
             Spacer(modifier.width(7.dp))
             Text(
-                text = text, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold
+                text = text,
+                style = MaterialTheme.typography.bodyLarge,
+                fontWeight = FontWeight.Bold
             )
         }
 
@@ -232,10 +274,19 @@ private fun NavBtn(
 @Composable
 fun BottomNavigationBarPreview() {
     NFCTaskTheme {
-        BottomBar(screenItems = listOf(
-            HomeScreen.TaskList, HomeScreen.Statistics, HomeScreen.Profile
-        ), currentScreenRoute = "statistics", onItemClick = {}, onAddTaskBtnClick = {
-
-        })
+        BottomBar(
+            screenItems = listOf(
+                HomeScreen.TaskList, HomeScreen.Statistics, HomeScreen.Profile
+            ),
+            currentScreenRoute = "statistics",
+            onItemClick = {},
+            onAddTaskBtnClick = {},
+            hasTaskProcess = true,
+            onFinishTask = {},
+            onTerminateTask = {},
+            onPauseTask = {},
+            onContinueTask = {},
+            onBottomTaskControllerClick = {}
+        )
     }
 }

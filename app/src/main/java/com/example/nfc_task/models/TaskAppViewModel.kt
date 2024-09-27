@@ -11,6 +11,9 @@ data class TaskUiState(
     val hasTaskProcess: Boolean = false,
     val isRunning: Boolean = false,
     val currentTaskTime: Int = 0,
+
+    val taskCnt: Int = 0,
+    val accumulatedTime: Int = 0
 )
 
 class TaskAppViewModel : ViewModel() {
@@ -32,5 +35,26 @@ class TaskAppViewModel : ViewModel() {
                 currentTaskTime = currentTaskTime,
             )
         }
+    }
+
+    // TODO: Temp logistic
+    fun updateTaskRecord(
+        runningTime: Int
+    ) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                taskCnt = currentState.taskCnt + 1,
+                accumulatedTime = currentState.accumulatedTime + runningTime
+            )
+        }
+    }
+
+    fun saveTask() {
+        // TODO: Save task
+    }
+
+    fun hasTaskProcess(): Boolean {
+        val currentState = _uiState.value
+        return currentState.hasTaskProcess
     }
 }

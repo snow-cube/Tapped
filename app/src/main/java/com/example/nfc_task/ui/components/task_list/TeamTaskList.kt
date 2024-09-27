@@ -23,8 +23,8 @@ import com.example.nfc_task.data.Task
 import com.example.nfc_task.ui.theme.NFCTaskTheme
 
 
-val folders2 = listOf(
-    listOf(
+val folders2 = mutableListOf(
+    mutableListOf(
         Task(
             inNfcManner = false,
             isPeriod = false,
@@ -41,7 +41,7 @@ val folders2 = listOf(
         ),
 
         ),
-    listOf(
+    mutableListOf(
         Task(
             inNfcManner = true,
             isPeriod = false,
@@ -50,7 +50,7 @@ val folders2 = listOf(
             taskTime = "9/17 15:00",
         ),
     ),
-    listOf(
+    mutableListOf(
         Task(
             inNfcManner = false,
             isPeriod = false,

@@ -8,20 +8,33 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.example.nfc_task.R
 
-sealed class HomeScreen(val route: String, @StringRes val resourceId: Int, val icon: ImageVector) {
+sealed class HomeScreen(
+    val route: String,
+    @StringRes val resourceId: Int,
+    val icon: ImageVector,
+    val includedRoutes: List<String>
+) {
     data object TaskList : HomeScreen(
         "task_list",
         R.string.bottom_task_list,
-        Icons.Filled.CheckCircle
+        Icons.Filled.CheckCircle,
+        includedRoutes = listOf(TaskListEnv.Personal.name, TaskListEnv.Team.name)
     )
     data object Statistics : HomeScreen(
         "statistics",
         R.string.bottom_statistics,
-        Icons.Filled.DateRange
+        Icons.Filled.DateRange,
+        includedRoutes = listOf()
     )
     data object Profile : HomeScreen(
         "profile",
         R.string.bottom_profile,
-        Icons.Filled.AccountCircle
+        Icons.Filled.AccountCircle,
+        includedRoutes = listOf()
     )
+}
+
+enum class TaskListEnv() {
+    Personal,
+    Team
 }

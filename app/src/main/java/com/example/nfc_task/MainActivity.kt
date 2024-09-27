@@ -22,9 +22,11 @@ import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.example.nfc_task.data.Task
 import com.example.nfc_task.models.TaskAppViewModel
 import com.example.nfc_task.tools.NfcManager
 import com.example.nfc_task.ui.components.TaskApp
+import com.example.nfc_task.ui.components.task_list.folders
 import com.example.nfc_task.ui.theme.NFCTaskTheme
 
 class MainActivity : ComponentActivity() {
@@ -132,9 +134,10 @@ class MainActivity : ComponentActivity() {
 
     private val finishTaskProcess: () -> Unit = {
         if (taskService != null && isBound) {
-            taskService!!.finishTaskProcess()
+            val runningTime = taskService!!.finishTaskProcess()
 
             // TODO: 将完成任务信息保存并更新到数据库
+            viewModel.updateTaskRecord(runningTime)
 
             handler.removeCallbacks(runnable)  // 停止定期获取数据
             viewModel.updateTaskProcessState(
@@ -165,15 +168,38 @@ class MainActivity : ComponentActivity() {
         setContent {
             NFCTaskTheme {
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                TaskApp(
+                TaskApp( // TODO: 也许之后可以把 uiState 直接传递，或者在 TaskApp 里再分流
                     hasTaskProcess = uiState.hasTaskProcess,
                     isRunning = uiState.isRunning,
                     currentTaskTime = uiState.currentTaskTime,
+                    taskCnt = uiState.taskCnt,
+                    accumulatedTime = uiState.accumulatedTime,
                     onStartNewTask = createTaskProcess,
                     onFinishTask = finishTaskProcess,
                     onTerminateTask = terminateTaskProcess,
                     onPauseTask = pauseTask,
                     onContinueTask = startOrContinueTask,
+                    onWriteClick = {
+                        // TODO: 应该先保存生成 ID 后再写入
+                        // TODO: UI 部分也应对 NFC 是否可用做出检查
+                        if (nfcManager != null && nfcManager!!.nfcAvailable) {
+                            nfcManager?.writeToNfc("testtaskid")
+                        } else {
+                            Toast.makeText(this, "NFC is not available", Toast.LENGTH_LONG).show()
+                        }
+                    },
+                    onSaveNewTaskClick = { taskName, taskTime ->
+                        folders[0].add(
+                            0,
+                            Task(
+                                inNfcManner = true,
+                                isPeriod = false,
+                                isRepeat = false,
+                                taskName = taskName,
+                                taskTime = taskTime,
+                            ),
+                        )
+                    }
                 )
             }
         }
@@ -197,10 +223,6 @@ class MainActivity : ComponentActivity() {
         tagDetected.addCategory(Intent.CATEGORY_DEFAULT)
         writeTagFilters = arrayOf(tagDetected)
 
-//        if (isBound) {
-//            taskService?.startTask()
-//        }
-
         createNotificationChannel()
     }
 
@@ -208,7 +230,21 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        nfcManager?.readFromIntent(intent)
+        val receivedMsg = nfcManager?.readFromIntent(intent)
+
+        // TODO: 判断格式是否正确且是否是当前正在运行的任务，若是其他任务则提示是否终止或完成当前任务
+        if (receivedMsg == "testtaskid") { // 格式正确
+            if (viewModel.hasTaskProcess()) {
+                if (true) { // ID 和当前进行中任务一致
+                    finishTaskProcess()
+                } else {
+                    // 警告并询问是否终止或完成当前任务
+                }
+            } else {
+                createTaskProcess()
+            }
+        }
+
         if (nfcManager?.isNfcTagIntent((intent.action ?: "")) == true) {
             nfcManager?.myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
         }

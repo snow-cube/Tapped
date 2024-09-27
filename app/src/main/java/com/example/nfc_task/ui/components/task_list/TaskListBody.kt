@@ -195,6 +195,7 @@ private fun TaskItem(
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
+                    // TODO: Using chip to instead
                     Text(
                         "${if (task.inNfcManner) "NFC" else "普通"}" +
                                 " | ${if (task.isPeriod) "持续" else "即时"}" +

@@ -20,9 +20,13 @@ val normalRed = Color(0xFFFF6347)
 val normalBlue = Color(0xFF00CED1)
 
 val normalYellow = Color(0xFFFFB347)
+val darkYellow = Color(0xFFA66F1C)
 
 val warningColor = normalRed
 val successColor = normalGreen
+
+val backgroundGreen = Color(0xFF88D8B0)
+val backgroundYellow = Color(0xFFFDCB7D)
 
 enum class ThemeColor(val color: Color) {
     blue(normalBlue),

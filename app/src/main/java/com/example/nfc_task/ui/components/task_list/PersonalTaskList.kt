@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import com.example.nfc_task.data.Task
 
 
-val folders = listOf(
-    listOf(
+val folders = mutableListOf(
+    mutableListOf(
         Task(
             inNfcManner = true,
             isPeriod = true,
@@ -35,7 +35,7 @@ val folders = listOf(
             taskTime = "9/20 20:00",
         )
     ),
-    listOf(
+    mutableListOf(
         Task(
             inNfcManner = true,
             isPeriod = false,
@@ -44,7 +44,7 @@ val folders = listOf(
             taskTime = "9/17 15:00",
         ),
     ),
-    listOf(
+    mutableListOf(
         Task(
             inNfcManner = false,
             isPeriod = false,
