@@ -53,8 +53,8 @@ class TaskAppViewModel : ViewModel() {
         // TODO: Save task
     }
 
-    fun hasTaskProcess(): Boolean {
-        val currentState = _uiState.value
-        return currentState.hasTaskProcess
-    }
+//    fun hasTaskProcess(): Boolean {
+//        val currentState = _uiState.value
+//        return currentState.hasTaskProcess
+//    }
 }

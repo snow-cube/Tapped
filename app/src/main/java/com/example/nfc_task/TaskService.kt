@@ -28,7 +28,7 @@ class TaskService : Service() {
         override fun run() {
             if (isRunning) {
                 counter++
-                Log.d("TaskService", "Timer count: $counter")
+//                Log.d("TaskApp.TaskService", "Timer count: $counter")
 
                 // 再次安排任务，每1秒执行一次
                 handler.postDelayed(this, 1000)
@@ -117,14 +117,14 @@ class TaskService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.d("TaskService", "Service created")
+        Log.d("TaskApp.TaskService", "Service created")
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         startForeground()
         hasTaskProcess = true
         startOrContinueTask()
-        Log.d("TaskService", "Service started")
+        Log.d("TaskApp.TaskService", "Service started")
         return START_STICKY
     }
 
@@ -132,7 +132,7 @@ class TaskService : Service() {
         super.onDestroy()
         stopTimer()
         hasTaskProcess = false
-        Log.d("TaskService", "Service destroyed")
+        Log.d("TaskApp.TaskService", "Service destroyed")
     }
 
     // 绑定时返回 Binder 对象
@@ -145,14 +145,14 @@ class TaskService : Service() {
         if (!isRunning) {
             isRunning = true
             handler.post(runnable)
-            Log.d("TimerService", "Timer started")
+            Log.d("TaskApp.TaskService", "Timer started")
         }
     }
 
     // 暂停计时器
     private fun pauseTimer() {
         isRunning = false
-        Log.d("TimerService", "Timer paused")
+        Log.d("TaskApp.TaskService", "Timer paused")
     }
 
     // 停止计时器，并重置计时
@@ -160,7 +160,7 @@ class TaskService : Service() {
         isRunning = false
         handler.removeCallbacks(runnable)
         counter = 0
-        Log.d("TimerService", "Timer stopped and reset")
+        Log.d("TaskApp.TaskService", "Timer stopped and reset")
     }
 
     // 获取当前计时器的时间

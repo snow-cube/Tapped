@@ -1,5 +1,6 @@
 package com.example.nfc_task
 
+import android.app.ActivityManager
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
@@ -29,6 +30,7 @@ import com.example.nfc_task.ui.components.TaskApp
 import com.example.nfc_task.ui.components.task_list.folders
 import com.example.nfc_task.ui.theme.NFCTaskTheme
 
+
 class MainActivity : ComponentActivity() {
 
     private val viewModel: TaskAppViewModel by viewModels()
@@ -47,7 +49,7 @@ class MainActivity : ComponentActivity() {
                     currentTaskTime = taskService?.getCurrentTaskTime() ?: 0
                 )
 
-                Log.d("msgUpdater", "Update data from service")
+//                Log.d("msgUpdater", "Update data from service")
 
                 handler.postDelayed(this, 1000)  // 每1秒执行一次
             }
@@ -60,15 +62,184 @@ class MainActivity : ComponentActivity() {
             val binder = service as TaskService.TaskBinder
             taskService = binder.getService()  // 获取到 TaskService 的实例
             isBound = true
-
             handler.post(runnable)  // 开始定期获取数据
-            Log.d("MainActivity", "Service connected")
+
+            if (pendingNfcMessage != null) {
+                Log.d("TaskApp.MainActivity", "Handle NFC message when service connected")
+                handleNfcMessage()
+            }
+
+            Log.d("TaskApp.MainActivity", "Service connected")
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
             taskService = null
             isBound = false
-            Log.d("MainActivity", "Service disconnected")
+            handler.removeCallbacks(runnable)  // 确保停止定期获取数据
+            Log.d("TaskApp.MainActivity", "Service disconnected")
+        }
+    }
+
+    private lateinit var writeTagFilters: Array<IntentFilter>
+    private var pendingIntent: PendingIntent? = null
+    private var nfcManager: NfcManager? = null
+
+    private var pendingNfcMessage: String? = null
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            NFCTaskTheme {
+                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+                TaskApp( // TODO: 也许之后可以把 uiState 直接传递，或者在 TaskApp 里再分流
+                    hasTaskProcess = uiState.hasTaskProcess,
+                    isRunning = uiState.isRunning,
+                    currentTaskTime = uiState.currentTaskTime,
+                    taskCnt = uiState.taskCnt,
+                    accumulatedTime = uiState.accumulatedTime,
+                    onStartNewTask = createTaskProcess,
+                    onFinishTask = finishTaskProcess,
+                    onTerminateTask = terminateTaskProcess,
+                    onPauseTask = pauseTask,
+                    onContinueTask = startOrContinueTask,
+                    onWriteClick = {
+                        // TODO: 应该先保存生成 ID 后再写入
+                        // TODO: UI 部分也应对 NFC 是否可用做出检查
+                        if (nfcManager != null && nfcManager!!.nfcAvailable) {
+                            nfcManager?.writeToNfc("testtaskid", this)
+                        } else {
+                            Toast.makeText(this, "NFC is not available", Toast.LENGTH_LONG).show()
+                        }
+                    },
+                    onSaveNewTaskClick = { taskName, taskTime ->
+                        folders[0].add(
+                            0,
+                            Task(
+                                inNfcManner = true,
+                                isPeriod = false,
+                                isRepeat = false,
+                                taskName = taskName,
+                                taskTime = taskTime,
+                            ),
+                        )
+                    })
+            }
+        }
+
+        nfcManager = NfcManager(context = this)
+
+        pendingIntent = PendingIntent.getActivity(
+            this,
+            0,
+            Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            PendingIntent.FLAG_MUTABLE // Important!!!
+        )
+        val tagDetected = IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED)
+        tagDetected.addCategory(Intent.CATEGORY_DEFAULT)
+        writeTagFilters = arrayOf(tagDetected)
+
+        // For when the activity is launched by the intent-filter for android.nfc.action.NDEF_DISCOVERED
+        if (nfcManager?.isNfcIntent(intent.action ?: "") == true) {
+            pendingNfcMessage = nfcManager?.readFromIntent(intent)
+            // 只保存 receivedMsg，等待后续执行完绑定服务工作时再处理
+        } else {
+            // Other type of intent
+        }
+
+        createNotificationChannel()
+    }
+
+    // For reading the NFC when the app is already launched
+    override fun onNewIntent(intent: Intent) {
+        Log.d("TaskApp.MainActivity", "onNewIntent")
+
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (nfcManager?.isNfcIntent(intent.action ?: "") == true) {
+            pendingNfcMessage = nfcManager?.readFromIntent(intent)
+            // 只保存 receivedMsg，等待后续执行完绑定服务工作时再处理
+        } else {
+            // Other type of intent
+        }
+
+        if (pendingNfcMessage != null) {
+            // 未绑定服务且有服务在运行：应等待 onStart() 中绑定服务并在连接时处理 Intent message
+            if (isBound || !isServiceRunning(TaskService::class.java)) {
+                Log.d("TaskApp.MainActivity", "Intent handled by onNewIntent")
+                handleNfcMessage()
+            }
+        }
+
+        if (nfcManager?.isNfcTagIntent((intent.action ?: "")) == true) {
+            nfcManager?.myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+
+        if (isServiceRunning(TaskService::class.java)) {
+            Intent(this, TaskService::class.java).also { intent ->
+                bindService(intent, connection, BIND_ABOVE_CLIENT)
+            }
+        } else {
+            if (pendingNfcMessage != null) {
+                Log.d("TaskApp.MainActivity", "Intent handled by onStart")
+                handleNfcMessage()
+            }
+        }
+    }
+
+    public override fun onPause() {
+        super.onPause()
+        nfcManager?.writeModeOff(this)
+    }
+
+    public override fun onResume() {
+        super.onResume()
+        nfcManager?.writeModeOn(this, pendingIntent, writeTagFilters)
+    }
+
+    override fun onStop() {
+        super.onStop()
+
+        if (isBound) {
+            unbindService(connection)
+            isBound = false
+            handler.removeCallbacks(runnable)  // 确保停止定期获取数据
+        }
+    }
+
+    private fun isServiceRunning(serviceClass: Class<*>): Boolean {
+        val manager = getSystemService(ACTIVITY_SERVICE) as ActivityManager
+        for (service in manager.getRunningServices(Int.MAX_VALUE)) {
+            if (serviceClass.name == service.service.className) {
+                return true
+            }
+        }
+        return false
+    }
+
+    // TODO: 判断格式是否正确且是否是当前正在运行的任务，若是其他任务则提示是否终止或完成当前任务
+    private fun handleNfcMessage() {
+        val nfcMsg: String
+        if (pendingNfcMessage != null) {
+            nfcMsg = pendingNfcMessage!!
+            pendingNfcMessage = null
+
+            if (nfcMsg == "testtaskid") { // 格式正确
+                if (isBound || taskService?.hasTaskProcess == true) {
+                    if (true) { // ID 和当前进行中任务一致
+                        finishTaskProcess()
+                    } else {
+                        // 警告并询问是否终止或完成当前任务
+                    }
+                } else {
+                    createTaskProcess()
+                }
+            }
         }
     }
 
@@ -85,7 +256,7 @@ class MainActivity : ComponentActivity() {
             // 新建 Service 并绑定
             intent = Intent(this, TaskService::class.java)
             startForegroundService(intent)
-            bindService(intent, connection, 0)
+            bindService(intent, connection, BIND_ABOVE_CLIENT)
             isBound = true
         }
     }
@@ -116,9 +287,7 @@ class MainActivity : ComponentActivity() {
 
             handler.removeCallbacks(runnable)  // 停止定期获取数据
             viewModel.updateTaskProcessState(
-                hasTaskProcess = false,
-                isRunning = false,
-                currentTaskTime = 0
+                hasTaskProcess = false, isRunning = false, currentTaskTime = 0
             )
 
             unbindService(connection)
@@ -141,9 +310,7 @@ class MainActivity : ComponentActivity() {
 
             handler.removeCallbacks(runnable)  // 停止定期获取数据
             viewModel.updateTaskProcessState(
-                hasTaskProcess = false,
-                isRunning = false,
-                currentTaskTime = 0
+                hasTaskProcess = false, isRunning = false, currentTaskTime = 0
             )
 
             unbindService(connection)
@@ -155,125 +322,6 @@ class MainActivity : ComponentActivity() {
             Toast.makeText(this, "Can't find service or service doesn't exist", Toast.LENGTH_LONG)
                 .show()
         }
-    }
-
-    private lateinit var writeTagFilters: Array<IntentFilter>
-    private var pendingIntent: PendingIntent? = null
-    private var nfcManager: NfcManager? = null
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            NFCTaskTheme {
-                val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                TaskApp( // TODO: 也许之后可以把 uiState 直接传递，或者在 TaskApp 里再分流
-                    hasTaskProcess = uiState.hasTaskProcess,
-                    isRunning = uiState.isRunning,
-                    currentTaskTime = uiState.currentTaskTime,
-                    taskCnt = uiState.taskCnt,
-                    accumulatedTime = uiState.accumulatedTime,
-                    onStartNewTask = createTaskProcess,
-                    onFinishTask = finishTaskProcess,
-                    onTerminateTask = terminateTaskProcess,
-                    onPauseTask = pauseTask,
-                    onContinueTask = startOrContinueTask,
-                    onWriteClick = {
-                        // TODO: 应该先保存生成 ID 后再写入
-                        // TODO: UI 部分也应对 NFC 是否可用做出检查
-                        if (nfcManager != null && nfcManager!!.nfcAvailable) {
-                            nfcManager?.writeToNfc("testtaskid")
-                        } else {
-                            Toast.makeText(this, "NFC is not available", Toast.LENGTH_LONG).show()
-                        }
-                    },
-                    onSaveNewTaskClick = { taskName, taskTime ->
-                        folders[0].add(
-                            0,
-                            Task(
-                                inNfcManner = true,
-                                isPeriod = false,
-                                isRepeat = false,
-                                taskName = taskName,
-                                taskTime = taskTime,
-                            ),
-                        )
-                    }
-                )
-            }
-        }
-
-        nfcManager = NfcManager(context = this)
-
-        // For when the activity is launched by the intent-filter for android.nfc.action.NDEF_DISCOVERED
-        if (nfcManager?.isNfcIntent(intent.action ?: "") == true) {
-            nfcManager?.readFromIntent(intent)
-        } else {
-            // Other type of intent
-        }
-
-        pendingIntent = PendingIntent.getActivity(
-            this,
-            0,
-            Intent(this, javaClass).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-            PendingIntent.FLAG_MUTABLE // Important!!!
-        )
-        val tagDetected = IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED)
-        tagDetected.addCategory(Intent.CATEGORY_DEFAULT)
-        writeTagFilters = arrayOf(tagDetected)
-
-        createNotificationChannel()
-    }
-
-    // For reading the NFC when the app is already launched
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        setIntent(intent)
-        val receivedMsg = nfcManager?.readFromIntent(intent)
-
-        // TODO: 判断格式是否正确且是否是当前正在运行的任务，若是其他任务则提示是否终止或完成当前任务
-        if (receivedMsg == "testtaskid") { // 格式正确
-            if (viewModel.hasTaskProcess()) {
-                if (true) { // ID 和当前进行中任务一致
-                    finishTaskProcess()
-                } else {
-                    // 警告并询问是否终止或完成当前任务
-                }
-            } else {
-                createTaskProcess()
-            }
-        }
-
-        if (nfcManager?.isNfcTagIntent((intent.action ?: "")) == true) {
-            nfcManager?.myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
-        }
-    }
-
-    override fun onStart() {
-        super.onStart()
-
-        Intent(this, TaskService::class.java).also { intent ->
-            bindService(intent, connection, 0)
-        }
-    }
-
-    public override fun onPause() {
-        super.onPause()
-        nfcManager?.writeModeOff(this)
-    }
-
-    public override fun onResume() {
-        super.onResume()
-        nfcManager?.writeModeOn(this, pendingIntent, writeTagFilters)
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        unbindService(connection)
-        isBound = false
-        handler.removeCallbacks(runnable)  // 确保停止定期获取数据
     }
 
     private fun createNotificationChannel() {

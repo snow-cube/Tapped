@@ -12,10 +12,11 @@ import android.nfc.NdefRecord.createMime
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.nfc.tech.Ndef
+import android.util.Log
 import android.widget.Toast
 import java.io.IOException
 
-class NfcManager(private val context: Context) {
+class NfcManager(context: Context) {
     private val nfcAdapter: NfcAdapter? = NfcAdapter.getDefaultAdapter(context)
     val nfcAvailable = nfcAdapter != null
 
@@ -76,7 +77,7 @@ class NfcManager(private val context: Context) {
         ndef.close()
     }
 
-    fun writeToNfc(text: String) {
+    fun writeToNfc(text: String, context: Context) {
         try {
             if (myTag == null) {
                 Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show()
@@ -107,6 +108,7 @@ class NfcManager(private val context: Context) {
     ) {
         writeMode = true
         nfcAdapter?.enableForegroundDispatch(activity, pendingIntent, writeTagFilters, null)
+        Log.d("TaskApp.MainActivity", "Write mode on")
     }
 
     //Disable Write and foreground dispatch to allow intent-filter to launch the app
