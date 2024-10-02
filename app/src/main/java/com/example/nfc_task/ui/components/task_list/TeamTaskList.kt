@@ -95,7 +95,7 @@ fun TeamInfoBoard() {
     ElevatedCard(
         shape = MaterialTheme.shapes.medium,
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondary,
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
         ),
         modifier = Modifier
             .fillMaxWidth()
@@ -117,7 +117,7 @@ fun TeamInfoBoard() {
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            HorizontalDivider(color = MaterialTheme.colorScheme.onSecondaryContainer)
+            HorizontalDivider(color = MaterialTheme.colorScheme.onPrimaryContainer)
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -126,7 +126,7 @@ fun TeamInfoBoard() {
                     .fillMaxWidth()
             ) {
                 Text("管理员: User1", style = MaterialTheme.typography.bodyLarge)
-                VerticalDivider(color = MaterialTheme.colorScheme.onSecondaryContainer)
+                VerticalDivider(color = MaterialTheme.colorScheme.onPrimaryContainer)
                 Text("已发布任务: 5", style = MaterialTheme.typography.bodyLarge)
             }
             Text("成员: 5人", style = MaterialTheme.typography.bodyLarge)

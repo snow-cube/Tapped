@@ -9,7 +9,9 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
+import android.graphics.Color
 import android.nfc.NfcAdapter
+import android.nfc.Tag
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
@@ -17,6 +19,7 @@ import android.os.IBinder
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -25,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.nfc_task.data.Task
 import com.example.nfc_task.models.TaskAppViewModel
+import com.example.nfc_task.models.WriteState
 import com.example.nfc_task.tools.NfcManager
 import com.example.nfc_task.ui.components.TaskApp
 import com.example.nfc_task.ui.components.task_list.folders
@@ -94,11 +98,7 @@ class MainActivity : ComponentActivity() {
             NFCTaskTheme {
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                 TaskApp( // TODO: 也许之后可以把 uiState 直接传递，或者在 TaskApp 里再分流
-                    hasTaskProcess = uiState.hasTaskProcess,
-                    isRunning = uiState.isRunning,
-                    currentTaskTime = uiState.currentTaskTime,
-                    taskCnt = uiState.taskCnt,
-                    accumulatedTime = uiState.accumulatedTime,
+                    uiState = uiState,
                     onStartNewTask = createTaskProcess,
                     onFinishTask = finishTaskProcess,
                     onTerminateTask = terminateTaskProcess,
@@ -108,10 +108,16 @@ class MainActivity : ComponentActivity() {
                         // TODO: 应该先保存生成 ID 后再写入
                         // TODO: UI 部分也应对 NFC 是否可用做出检查
                         if (nfcManager != null && nfcManager!!.nfcAvailable) {
-                            nfcManager?.writeToNfc("testtaskid", this)
+                            nfcManager?.setPendingMsgToWrite("testtaskid")
+                            viewModel.setWritingState(WriteState.Writing)
                         } else {
-                            Toast.makeText(this, "NFC is not available", Toast.LENGTH_LONG).show()
+                            Toast.makeText(this, "NFC is not available", Toast.LENGTH_LONG)
+                                .show()
                         }
+                    },
+                    onCloseWritingClick = {
+                        nfcManager?.clearPendingMsgToWrite()
+                        viewModel.setWritingState(WriteState.Closed)
                     },
                     onSaveNewTaskClick = { taskName, taskTime ->
                         folders[0].add(
@@ -173,7 +179,11 @@ class MainActivity : ComponentActivity() {
         }
 
         if (nfcManager?.isNfcTagIntent((intent.action ?: "")) == true) {
-            nfcManager?.myTag = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
+            val tag: Tag? = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
+            if (nfcManager?.hasPendingMsgToWrite() == true) {
+                nfcManager?.writePendingMsg(tag, this)
+                viewModel.setWritingState(WriteState.Succeeded)
+            }
         }
     }
 

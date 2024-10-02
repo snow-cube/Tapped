@@ -27,6 +27,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -34,9 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nfc_task.data.Task
 import com.example.nfc_task.ui.theme.NFCTaskTheme
-import com.example.nfc_task.ui.theme.ThemeColor
-import com.example.nfc_task.ui.theme.darkGrey
-import com.example.nfc_task.ui.theme.mediumGrey
+import com.example.nfc_task.ui.theme.paletteColor
+import com.example.nfc_task.ui.theme.variantsColor
 
 @Composable
 fun TaskListBody(onTaskItemClick: () -> Unit, folders: List<List<Task>>) {
@@ -50,11 +50,12 @@ fun TaskListBody(onTaskItemClick: () -> Unit, folders: List<List<Task>>) {
                 bottom = 0.dp
             )
             .fillMaxWidth()
+            .clip(MaterialTheme.shapes.medium)
     ) {
         item {
             TaskFolder(
                 folderName = "任务分组 1",
-                themeColor = ThemeColor.blue.color,
+                themeColor = variantsColor[0],
                 onTaskItemClick = onTaskItemClick,
                 tasks = folders[0]
             )
@@ -62,7 +63,7 @@ fun TaskListBody(onTaskItemClick: () -> Unit, folders: List<List<Task>>) {
         item {
             TaskFolder(
                 folderName = "Folder 2",
-                themeColor = ThemeColor.yellow.color,
+                themeColor = variantsColor[1],
                 onTaskItemClick = onTaskItemClick,
                 tasks = folders[1]
             )
@@ -70,7 +71,7 @@ fun TaskListBody(onTaskItemClick: () -> Unit, folders: List<List<Task>>) {
         item {
             TaskFolder(
                 folderName = "Test Folder",
-                themeColor = ThemeColor.green.color,
+                themeColor = variantsColor[2],
                 onTaskItemClick = onTaskItemClick,
                 tasks = folders[2]
             )
@@ -90,7 +91,7 @@ private fun TaskFolder(
     var folded by remember { mutableStateOf(false) }
 
     Surface(
-        color = MaterialTheme.colorScheme.background,
+        color = MaterialTheme.colorScheme.surfaceBright,
         shape = MaterialTheme.shapes.medium,
         modifier = Modifier
             .fillMaxWidth()
@@ -106,7 +107,7 @@ private fun TaskFolder(
 //                shape = MaterialTheme.shapes.medium,
                 color = themeColor,
                 modifier = Modifier
-                    .height(60.dp)
+                    .height(54.dp)
                     .fillMaxWidth()
             ) {
                 Row(
@@ -126,10 +127,10 @@ private fun TaskFolder(
                     IconButton(
                         onClick = { folded = !folded },
                         colors = IconButtonColors(
-                            containerColor = Color(0x00000000),
+                            containerColor = Color.Transparent,
                             contentColor = Color.White,
-                            disabledContainerColor = Color(0x00000000),
-                            disabledContentColor = darkGrey
+                            disabledContainerColor = Color.Transparent,
+                            disabledContentColor = paletteColor.invalidGrey
                         )
                     ) {
                         Icon(
@@ -144,7 +145,12 @@ private fun TaskFolder(
             if (!folded) {
                 Column(
                     verticalArrangement = Arrangement.spacedBy(2.dp),
-                    modifier = Modifier.padding(10.dp)
+                    modifier = Modifier.padding(
+                        top = 6.dp,
+                        start = 10.dp,
+                        end = 10.dp,
+                        bottom = 10.dp
+                    )
                 ) {
                     tasks.forEach() {
                         TaskItem(
@@ -175,7 +181,7 @@ private fun TaskItem(
         ) { }
         Surface(
             onClick = onTaskItemClick,
-            color = Color(0x0A000000),
+            color = MaterialTheme.colorScheme.surface,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
                 .height(60.dp)
@@ -200,13 +206,13 @@ private fun TaskItem(
                         "${if (task.inNfcManner) "NFC" else "普通"}" +
                                 " | ${if (task.isPeriod) "持续" else "即时"}" +
                                 "${if (task.isRepeat) " | 重复" else ""}",
-                        color = mediumGrey,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
 
                     Text(
                         task.taskTime,
-                        color = mediumGrey,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -214,7 +220,7 @@ private fun TaskItem(
                 Text(
                     task.taskName,
                     lineHeight = 30.sp,
-                    color = darkGrey,
+                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )

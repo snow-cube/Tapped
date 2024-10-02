@@ -1,5 +1,6 @@
 package com.example.nfc_task.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -11,25 +12,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.example.nfc_task.ui.theme.darkGrey
+import com.example.nfc_task.ui.theme.NFCTaskTheme
 
 @Composable
 fun TextSwitch(
     selected: String,
     btnList: List<String>,
     onSelectedChanged: (String) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    backgroundColor: Color = MaterialTheme.colorScheme.surfaceDim,
+    color: Color = MaterialTheme.colorScheme.primary,
 ) {
     Surface(
-        color = Color(0x0C000000),
+        color = backgroundColor,
         shape = MaterialTheme.shapes.small,
         modifier = modifier
             .height(40.dp)
@@ -42,6 +42,7 @@ fun TextSwitch(
                 TextSwitchBtn(
                     selected = selected == btnName,
                     text = btnName,
+                    color = color,
                     onClick = {
                         onSelectedChanged(btnName)
                     },
@@ -59,20 +60,36 @@ private fun TextSwitchBtn(
     selected: Boolean,
     text: String,
     onClick: () -> Unit,
-    modifier: Modifier
+    modifier: Modifier,
+    color: Color
 ) {
     Button(
         onClick = onClick,
         colors = ButtonColors(
-            containerColor = if (selected) MaterialTheme.colorScheme.secondary else Color(0x00000000),
-            contentColor = if (selected) MaterialTheme.colorScheme.onSecondary else darkGrey,
-            disabledContainerColor = Color(0x00000000),
-            disabledContentColor = MaterialTheme.colorScheme.onPrimary
+            containerColor = if (selected) color else Color.Transparent,
+            contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+            disabledContainerColor = Color.Red,
+            disabledContentColor = Color.White
         ),
         shape = MaterialTheme.shapes.small,
         contentPadding = PaddingValues(0.dp),
         modifier = modifier
     ) {
         Text(text, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Preview
+@Composable
+private fun TextSwitchPreview() {
+    NFCTaskTheme {
+        TextSwitch(
+            selected = "Option 1",
+            btnList = listOf(
+                "Option 1",
+                "Option 2"
+            ),
+            onSelectedChanged = {}
+        )
     }
 }

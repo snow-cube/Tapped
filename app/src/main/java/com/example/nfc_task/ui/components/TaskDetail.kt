@@ -11,17 +11,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,28 +32,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.nfc_task.R
+import com.example.nfc_task.models.TaskUiState
 import com.example.nfc_task.ui.theme.NFCTaskTheme
-import com.example.nfc_task.ui.theme.backgroundGreen
-import com.example.nfc_task.ui.theme.backgroundYellow
-import com.example.nfc_task.ui.theme.lightGreen
-import com.example.nfc_task.ui.theme.lightGrey
-import com.example.nfc_task.ui.theme.mediumGrey
-import com.example.nfc_task.ui.theme.normalBlue
-import com.example.nfc_task.ui.theme.normalGreen
-import com.example.nfc_task.ui.theme.normalYellow
+import com.example.nfc_task.ui.theme.paletteColor
 
 @Composable
 fun TaskDetail(
-    hasTaskProcess: Boolean,
-    isRunning: Boolean,
-    currentTaskTime: Int,
-    taskCnt: Int = 0,
-    accumulatedTime: Int = 0,
     onStartNewTask: () -> Unit,
     onFinishTask: () -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
-    onContinueTask: () -> Unit
+    onContinueTask: () -> Unit,
+    uiState: TaskUiState
 ) {
     // 须通过 Service 返回的状态控制按钮的 enable 状态
     // 若按钮 enabled 点击后会尝试调用服务接口
@@ -66,16 +53,16 @@ fun TaskDetail(
     // TODO: 终止 / 完成 同时只显示一个，终止按钮发出警告
     // TODO: 开始新任务 / 暂停 / 继续 同时只显示一个
 
-    val taskStateText = if (hasTaskProcess)
-        if (isRunning) "进行中" else "暂停中"
+    val taskStateText = if (uiState.hasTaskProcess)
+        if (uiState.isRunning) "进行中" else "暂停中"
     else "未开始"
-    val formattedTime = DateUtils.formatElapsedTime(currentTaskTime.toLong())
+    val formattedTime = DateUtils.formatElapsedTime(uiState.currentTaskTime.toLong())
 
-    val formattedAccumulatedTime = DateUtils.formatElapsedTime(accumulatedTime.toLong())
+    val formattedAccumulatedTime = DateUtils.formatElapsedTime(uiState.accumulatedTime.toLong())
 
-    val stateColor = if (hasTaskProcess)
-        if (isRunning) backgroundGreen else backgroundYellow
-    else normalBlue
+    val stateColor = if (uiState.hasTaskProcess)
+        if (uiState.isRunning) paletteColor.backgroundGreen else paletteColor.backgroundYellow
+    else paletteColor.backgroundBlue
 
     Scaffold(
         containerColor = stateColor,
@@ -120,7 +107,7 @@ fun TaskDetail(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "累计次数 $taskCnt    |    累计时间 $formattedAccumulatedTime",
+                        "累计次数 ${uiState.taskCnt}    |    累计时间 $formattedAccumulatedTime",
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White,
                     )
@@ -139,11 +126,11 @@ fun TaskDetail(
                     IconButton(
                         enabled = true,
                         onClick = {
-                            if (!hasTaskProcess) {
+                            if (!uiState.hasTaskProcess) {
                                 onStartNewTask()
                             } else {
                                 if (true /* TODO: 是本任务 */) {
-                                    if (isRunning) {
+                                    if (uiState.isRunning) {
                                         onPauseTask()
                                     } else {
                                         onContinueTask()
@@ -163,7 +150,7 @@ fun TaskDetail(
 //                            .padding(50.dp)
                     ) {
                         Icon(
-                            imageVector = if (hasTaskProcess && isRunning /* TODO: 并且是本任务 */)
+                            imageVector = if (uiState.hasTaskProcess && uiState.isRunning /* TODO: 并且是本任务 */)
                                 ImageVector.vectorResource(R.drawable.baseline_pause_24)
                             else Icons.Default.PlayArrow,
                             contentDescription = "Start / Pause / Continue",
@@ -173,7 +160,7 @@ fun TaskDetail(
                         )
                     }
                     IconButton(
-                        enabled = hasTaskProcess, // TODO: 事实上还需要运行任务是此任务
+                        enabled = uiState.hasTaskProcess, // TODO: 事实上还需要运行任务是此任务
                         onClick = {
                             if (true /* TODO: 非 NFC */) {
                                 onFinishTask()
@@ -208,14 +195,19 @@ fun TaskDetail(
 @Composable
 private fun TaskDetailRunningPreview() {
     NFCTaskTheme {
-        TaskDetail(currentTaskTime = 78,
-            hasTaskProcess = true,
-            isRunning = true,
-            onTerminateTask = {},
+        TaskDetail(
+            onStartNewTask = {},
             onFinishTask = {},
+            onTerminateTask = {},
             onPauseTask = {},
             onContinueTask = {},
-            onStartNewTask = {})
+            uiState = TaskUiState(
+                hasTaskProcess = true,
+                isRunning = true,
+                taskCnt = 1,
+                accumulatedTime = 110
+            )
+        )
     }
 }
 
@@ -223,13 +215,38 @@ private fun TaskDetailRunningPreview() {
 @Composable
 private fun TaskDetailPausedPreview() {
     NFCTaskTheme {
-        TaskDetail(currentTaskTime = 78,
-            hasTaskProcess = true,
-            isRunning = false,
-            onTerminateTask = {},
+        TaskDetail(
+            onStartNewTask = {},
             onFinishTask = {},
+            onTerminateTask = {},
             onPauseTask = {},
             onContinueTask = {},
-            onStartNewTask = {})
+            uiState = TaskUiState(
+                hasTaskProcess = true,
+                isRunning = false,
+                taskCnt = 2,
+                accumulatedTime = 130
+            )
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun TaskDetailNotActivePreview() {
+    NFCTaskTheme {
+        TaskDetail(
+            onStartNewTask = {},
+            onFinishTask = {},
+            onTerminateTask = {},
+            onPauseTask = {},
+            onContinueTask = {},
+            uiState = TaskUiState(
+                hasTaskProcess = false,
+                isRunning = false,
+                taskCnt = 2,
+                accumulatedTime = 130
+            )
+        )
     }
 }

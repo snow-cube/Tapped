@@ -17,6 +17,7 @@ import android.widget.Toast
 import java.io.IOException
 
 class NfcManager(context: Context) {
+    private var pendingMessageToWrite: String? = null
     private val nfcAdapter: NfcAdapter? = NfcAdapter.getDefaultAdapter(context)
     val nfcAvailable = nfcAdapter != null
 
@@ -28,7 +29,6 @@ class NfcManager(context: Context) {
     }
 
     private var writeMode = false // TODO: Make use of writeMode
-    var myTag: Tag? = null
 
     fun isNfcIntent(action: String): Boolean {
         return NfcAdapter.ACTION_TAG_DISCOVERED == action || NfcAdapter.ACTION_TECH_DISCOVERED == action || NfcAdapter.ACTION_NDEF_DISCOVERED == action
@@ -77,12 +77,12 @@ class NfcManager(context: Context) {
         ndef.close()
     }
 
-    fun writeToNfc(text: String, context: Context) {
+    fun writeToNfc(tag: Tag?, text: String, context: Context) {
         try {
-            if (myTag == null) {
+            if (tag == null) {
                 Toast.makeText(context, ERROR_DETECTED, Toast.LENGTH_LONG).show()
             } else {
-                write(text, myTag)
+                write(text, tag)
                 Toast.makeText(context, WRITE_SUCCESS, Toast.LENGTH_LONG).show()
             }
         } catch (e: IOException) {
@@ -115,5 +115,24 @@ class NfcManager(context: Context) {
     fun writeModeOff(activity: Activity) {
         writeMode = false
         nfcAdapter?.disableForegroundDispatch(activity)
+    }
+
+    fun writePendingMsg(tag: Tag?, context: Context) {
+        if (pendingMessageToWrite != null) {
+            writeToNfc(tag, pendingMessageToWrite!!, context)
+            pendingMessageToWrite = null
+        }
+    }
+
+    fun setPendingMsgToWrite(msg: String) {
+        pendingMessageToWrite = msg
+    }
+
+    fun clearPendingMsgToWrite() {
+        pendingMessageToWrite = null
+    }
+
+    fun hasPendingMsgToWrite(): Boolean {
+        return pendingMessageToWrite != null
     }
 }

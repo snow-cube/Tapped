@@ -10,24 +10,23 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Done
-import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -51,14 +50,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.nfc_task.R
+import com.example.nfc_task.models.WriteState
 import com.example.nfc_task.ui.theme.NFCTaskTheme
-import com.example.nfc_task.ui.theme.lightGrey
-import com.example.nfc_task.ui.theme.mediumGrey
+import com.example.nfc_task.ui.theme.paletteColor
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -67,12 +67,12 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddTaskComponent(
-    onFinishClick: (
-        String,
-        String
-    ) -> Unit,
+    onFinishClick: (String, String) -> Unit,
     onCloseClick: () -> Unit,
-    onWriteClick: () -> Unit
+    onWriteClick: () -> Unit,
+    onCloseWritingClick: () -> Unit,
+    writingState: WriteState,
+    modifier: Modifier = Modifier
 ) {
 
     var selectedTime: TimePickerState? by remember { mutableStateOf(null) }
@@ -84,9 +84,11 @@ fun AddTaskComponent(
 
     Column(
         verticalArrangement = Arrangement.SpaceBetween,
-        modifier = Modifier
+        modifier = modifier
             .padding(
-                horizontal = 13.dp
+                start = 13.dp,
+                end = 13.dp,
+                bottom = 10.dp
             )
             .fillMaxHeight()
     ) {
@@ -96,7 +98,7 @@ fun AddTaskComponent(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxWidth()
             ) {
                 IconButton(
@@ -116,7 +118,8 @@ fun AddTaskComponent(
                     selected = switchSelected,
                     btnList = listOf("NFC", "普通"),
                     onSelectedChanged = { switchSelected = it },
-                    modifier = Modifier
+                    backgroundColor = MaterialTheme.colorScheme.surface,
+                    modifier = modifier
                         .width(120.dp)
                 )
                 IconButton(
@@ -154,7 +157,7 @@ fun AddTaskComponent(
                     IconButton(
                         onClick = { taskName = "" },
                         colors = IconButtonDefaults.iconButtonColors(
-                            contentColor = mediumGrey
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     ) {
                         Icon(
@@ -164,7 +167,7 @@ fun AddTaskComponent(
                     }
                 },
                 singleLine = true,
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxWidth()
                     .height(64.dp)
             )
@@ -177,7 +180,7 @@ fun AddTaskComponent(
                     IconButton(
                         onClick = { taskDescription = "" },
                         colors = IconButtonDefaults.iconButtonColors(
-                            contentColor = mediumGrey
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     ) {
                         Icon(
@@ -188,7 +191,7 @@ fun AddTaskComponent(
                 },
                 minLines = 2,
                 maxLines = 5,
-                modifier = Modifier
+                modifier = modifier
                     .fillMaxWidth()
             )
 
@@ -196,22 +199,91 @@ fun AddTaskComponent(
                 onConfirm = {
                     selectedDate = it
                 },
-                onDismiss = { }
+                onDismiss = { },
             )
 
-            TimePicker(onConfirm = { time ->
-                selectedTime = time
-            }, onDismiss = {
+            TimePicker(
+                onConfirm = { time ->
+                    selectedTime = time
+                }, onDismiss = {
 
-            })
+                })
         }
         OperationButton(
             text = "写入",
             enabled = taskNfcEnabled,
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
         ) {
             onWriteClick()
+        }
+    }
+
+    if (writingState != WriteState.Closed) {
+        WritingDialog(
+            writingState = writingState,
+            onDismissRequest = onCloseWritingClick,
+        )
+    }
+}
+
+@Composable
+fun WritingDialog(
+    writingState: WriteState,
+    onDismissRequest: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismissRequest) {
+        Card(
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ),
+            shape = MaterialTheme.shapes.large,
+            modifier = Modifier
+                .width(280.dp)
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(20.dp)
+            ) {
+                Text(
+                    text = "将任务写入 NFC 标签",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+                Icon(
+                    imageVector = ImageVector.vectorResource(R.drawable.nfc),
+                    contentDescription = "NFC Tag",
+                    modifier = Modifier
+                        .size(100.dp)
+                )
+                Text(
+                    text = when (writingState) {
+                        WriteState.Failed -> "写入失败！"
+                        WriteState.Succeeded -> "写入成功！"
+                        else -> "请将设备靠近 NFC 标签以写入任务"
+                    },
+                    textAlign = TextAlign.Center,
+                    minLines = 2
+                )
+                Button(
+                    onClick = { onDismissRequest() },
+                    colors = ButtonDefaults.textButtonColors(
+                        containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        contentColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    modifier = Modifier
+                        .width(160.dp)
+                ) {
+                    if (writingState == WriteState.Writing) {
+                        Text("取消")
+                    } else {
+                        Text("关闭")
+                    }
+                }
+            }
         }
     }
 }
@@ -414,53 +486,17 @@ fun DatePicker(
     }
 }
 
-//@Composable
-//private fun ConfirmButton(
-//    modifier: Modifier = Modifier,
-//    text: String = "确认",
-//    enabled: Boolean = true,
-//    colors: ButtonColors = ButtonDefaults.buttonColors(
-//        containerColor = MaterialTheme.colorScheme.primary,
-//        contentColor = MaterialTheme.colorScheme.onPrimary,
-//        disabledContainerColor = Color(0x5A000000),
-//        disabledContentColor = Color.White
-//    ),
-//    onClick: () -> Unit,
-//) {
-//    OperationButton(
-//        modifier = modifier, text = text, enabled = enabled, colors = colors, onClick = onClick
-//    )
-//}
-//
-//@Composable
-//private fun CancelButton(
-//    modifier: Modifier = Modifier,
-//    text: String = "取消",
-//    enabled: Boolean = true,
-//    colors: ButtonColors = ButtonDefaults.buttonColors(
-//        containerColor = Color(0x1A000000),
-//        contentColor = Color.Black,
-//        disabledContainerColor = Color(0x5A000000),
-//        disabledContentColor = Color.White
-//    ),
-//    onClick: () -> Unit,
-//) {
-//    OperationButton(
-//        modifier = modifier, text = text, enabled = enabled, colors = colors, onClick = onClick
-//    )
-//}
-
 @Composable
 private fun OperationButton(
-    modifier: Modifier = Modifier,
     text: String,
     enabled: Boolean = true,
     colors: ButtonColors = ButtonDefaults.buttonColors(
         containerColor = MaterialTheme.colorScheme.primary,
         contentColor = MaterialTheme.colorScheme.onPrimary,
-        disabledContainerColor = Color(0x0A000000),
-        disabledContentColor = mediumGrey
+        disabledContainerColor = paletteColor.invalidGrey,
+        disabledContentColor = Color.White
     ),
+    modifier: Modifier,
     onClick: () -> Unit,
 ) {
     Button(
@@ -482,11 +518,57 @@ fun AddTaskComponentPreview() {
                 .height(500.dp)
         ) {
             AddTaskComponent(
-                onCloseClick = {},
                 onFinishClick = { _, _ ->
 
                 },
-                onWriteClick = {}
+                onCloseClick = {},
+                onWriteClick = {},
+                onCloseWritingClick = {},
+                writingState = WriteState.Closed,
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun AddTaskComponentWritingPreview() {
+    NFCTaskTheme {
+        Surface(
+            color = Color.White, modifier = Modifier
+                .fillMaxWidth()
+                .height(500.dp)
+        ) {
+            AddTaskComponent(
+                onFinishClick = { _, _ ->
+
+                },
+                onCloseClick = {},
+                onWriteClick = {},
+                onCloseWritingClick = {},
+                writingState = WriteState.Writing,
+            )
+        }
+    }
+}
+
+@Preview
+@Composable
+fun AddTaskComponentFailedPreview() {
+    NFCTaskTheme {
+        Surface(
+            color = Color.White, modifier = Modifier
+                .fillMaxWidth()
+                .height(500.dp)
+        ) {
+            AddTaskComponent(
+                onFinishClick = { _, _ ->
+
+                },
+                onCloseClick = {},
+                onWriteClick = {},
+                onCloseWritingClick = {},
+                writingState = WriteState.Failed,
             )
         }
     }

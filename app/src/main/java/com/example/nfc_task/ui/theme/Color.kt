@@ -2,43 +2,53 @@ package com.example.nfc_task.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val purple1 = Color(0xFF8A2BE2)
-val purple2 = Color(0xFFEE82EE)
-val purple3 = Color(0xFFF3E8F6)
+data class PaletteColor(
+    val normalGreen: Color,
+    val darkGreen: Color,
 
+    val normalRed: Color,
 
-val lightGrey = Color(0xFFF3EFF3)
-val mediumGrey = Color(0xFF939393)
-val darkGrey = Color(0xFF666666)
+    val normalBlue: Color,
 
-val lightGreen = Color(0xFFB9EBD3)
-val normalGreen = Color(0xFF4CA26C)
-val darkGreen = Color(0xFF1A571A)
+    val normalYellow: Color,
+    val darkYellow: Color,
 
-val normalRed = Color(0xFFFF6347)
+    val backgroundGreen: Color,
+    val backgroundYellow: Color,
+    val backgroundBlue: Color,
 
-val normalBlue = Color(0xFF00CED1)
+    val invalidGrey: Color,
+)
 
-val normalYellow = Color(0xFFFFB347)
-val darkYellow = Color(0xFFA66F1C)
+val paletteColor = PaletteColor(
+    normalGreen = Color(0xFF4CA26C),
+    darkGreen = Color(0xFF1A571A),
 
-val warningColor = normalRed
-val successColor = normalGreen
+    normalRed = Color(0xFFFF6347),
 
-val backgroundGreen = Color(0xFF88D8B0)
-val backgroundYellow = Color(0xFFFDCB7D)
+    normalBlue = Color(0xFF00CED1),
 
-enum class ThemeColor(val color: Color) {
-    blue(normalBlue),
-    yellow(normalYellow),
-    red(normalRed),
-    green(normalGreen)
-}
+    normalYellow = Color(0xFFFFB347),
+    darkYellow = Color(0xFFA66F1C),
+
+    backgroundGreen = Color(0xFF88D8B0),
+    backgroundYellow = Color(0xFFFDCB7D),
+    backgroundBlue = Color(0xFF00CED1),
+
+    invalidGrey = Color(0xFFB4B4B4)
+)
+
+val variantsColor = listOf(
+    paletteColor.normalBlue,
+    paletteColor.normalYellow,
+    paletteColor.normalRed,
+    paletteColor.normalGreen
+)
 
 enum class StateColor(val color: Color) {
-    normal(normalBlue),
-    safe(normalGreen),
-    warning(normalYellow),
-    unsafe(normalRed)
+    Normal(paletteColor.normalBlue),
+    Safe(paletteColor.normalGreen),
+    Warning(paletteColor.normalYellow),
+    Unsafe(paletteColor.normalRed)
 }
 

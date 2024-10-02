@@ -8,12 +8,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsBottomHeight
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -43,9 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.nfc_task.R
 import com.example.nfc_task.ui.theme.NFCTaskTheme
-import com.example.nfc_task.ui.theme.darkGreen
-import com.example.nfc_task.ui.theme.darkGrey
-import com.example.nfc_task.ui.theme.darkYellow
+import com.example.nfc_task.ui.theme.paletteColor
 
 @Composable
 fun BottomBar(
@@ -65,9 +68,12 @@ fun BottomBar(
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(7.dp),
-        modifier = modifier.padding(
-            top = 9.dp, start = 10.dp, end = 10.dp, bottom = 20.dp
-        )
+        modifier = modifier
+            .background(color = MaterialTheme.colorScheme.surface)
+            .padding(
+                top = 5.dp, start = 10.dp, end = 10.dp, bottom = 5.dp
+            )
+            .windowInsetsPadding(WindowInsets.navigationBars)
     ) {
         if (hasTaskProcess) {
             BottomTaskController(
@@ -149,7 +155,7 @@ private fun BottomTaskController(
 ) {
     val taskStateText = if (isRunning) "进行中" else "暂停中"
     val formattedTime = DateUtils.formatElapsedTime(currentTaskTime.toLong())
-    val stateColor = if (isRunning) darkGreen else darkYellow
+    val stateColor = if (isRunning) paletteColor.darkGreen else paletteColor.darkYellow
 
     Surface(
         onClick = onClick,
@@ -160,7 +166,8 @@ private fun BottomTaskController(
         ),
         modifier = modifier
             .background(
-                color = MaterialTheme.colorScheme.background, shape = RoundedCornerShape(30.dp)
+                color = MaterialTheme.colorScheme.tertiaryContainer,
+                shape = RoundedCornerShape(30.dp)
             )
             .fillMaxWidth()
             .height(80.dp)
@@ -177,7 +184,7 @@ private fun BottomTaskController(
                     "NFC · 测试任务 1",
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
-                    color = darkGrey
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 HorizontalDivider()
                 Row {
@@ -194,10 +201,10 @@ private fun BottomTaskController(
                 IconButton(
                     onClick = if (isRunning) onPauseTask else onContinueTask,
                     colors = IconButtonColors(
-                        containerColor = Color(0x0C000000),
+                        containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = Color(0x0C000000),
-                        disabledContentColor = darkGrey
+                        disabledContainerColor = Color.Red,
+                        disabledContentColor = Color.Red
                     )
                 ) {
                     Icon(
@@ -211,10 +218,10 @@ private fun BottomTaskController(
                 IconButton(
                     onClick = onFinishTask, // 若为 NFC 任务，应为终止
                     colors = IconButtonColors(
-                        containerColor = Color(0x0C000000),
+                        containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.primary,
-                        disabledContainerColor = Color(0x0C000000),
-                        disabledContentColor = darkGrey
+                        disabledContainerColor = Color.Red,
+                        disabledContentColor = Color.Red
                     )
                 ) {
                     Icon(

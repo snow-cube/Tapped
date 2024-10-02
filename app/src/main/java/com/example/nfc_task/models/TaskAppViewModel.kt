@@ -6,6 +6,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
+enum class WriteState {
+    Closed,
+    Writing,
+    Succeeded,
+    Failed
+}
+
 data class TaskUiState(
     // TODO: 对 UI 状态分类嵌套
     val hasTaskProcess: Boolean = false,
@@ -13,7 +20,9 @@ data class TaskUiState(
     val currentTaskTime: Int = 0,
 
     val taskCnt: Int = 0,
-    val accumulatedTime: Int = 0
+    val accumulatedTime: Int = 0,
+
+    val writeState: WriteState = WriteState.Closed
 )
 
 class TaskAppViewModel : ViewModel() {
@@ -53,8 +62,11 @@ class TaskAppViewModel : ViewModel() {
         // TODO: Save task
     }
 
-//    fun hasTaskProcess(): Boolean {
-//        val currentState = _uiState.value
-//        return currentState.hasTaskProcess
-//    }
+    fun setWritingState(state: WriteState) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                writeState = state
+            )
+        }
+    }
 }

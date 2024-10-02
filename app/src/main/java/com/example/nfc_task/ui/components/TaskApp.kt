@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.nfc_task.models.TaskUiState
 
 enum class TaskAppScreen {
     Home,
@@ -13,11 +14,6 @@ enum class TaskAppScreen {
 
 @Composable
 fun TaskApp(
-    hasTaskProcess: Boolean,
-    isRunning: Boolean,
-    currentTaskTime: Int,
-    taskCnt: Int = 0,
-    accumulatedTime: Int = 0,
     onStartNewTask: () -> Unit,
     onFinishTask: () -> Unit,
     onTerminateTask: () -> Unit,
@@ -25,6 +21,8 @@ fun TaskApp(
     onContinueTask: () -> Unit,
     onWriteClick: () -> Unit,
     onSaveNewTaskClick: (String, String) -> Unit,
+    uiState: TaskUiState,
+    onCloseWritingClick: () -> Unit,
 ) {
     val taskAppNavController = rememberNavController()
     NavHost(
@@ -37,9 +35,8 @@ fun TaskApp(
                     taskAppNavController.navigate(TaskAppScreen.TaskDetail.name)
                 },
                 onWriteClick = onWriteClick,
-                hasTaskProcess = hasTaskProcess,
-                currentTaskTime = currentTaskTime,
-                isRunning = isRunning,
+                onCloseWritingClick = onCloseWritingClick,
+                uiState = uiState,
                 onFinishTask = onFinishTask,
                 onTerminateTask = onTerminateTask,
                 onPauseTask = onPauseTask,
@@ -52,11 +49,7 @@ fun TaskApp(
         }
         composable(route = TaskAppScreen.TaskDetail.name) {
             TaskDetail(
-                hasTaskProcess = hasTaskProcess,
-                isRunning = isRunning,
-                currentTaskTime = currentTaskTime,
-                taskCnt = taskCnt,
-                accumulatedTime = accumulatedTime,
+                uiState = uiState,
                 onStartNewTask = onStartNewTask,
                 onContinueTask = onContinueTask,
                 onFinishTask = onFinishTask,

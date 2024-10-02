@@ -1,8 +1,12 @@
 package com.example.nfc_task.ui.components
 
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
@@ -40,6 +44,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
 import com.example.nfc_task.R
+import com.example.nfc_task.models.TaskUiState
 import com.example.nfc_task.ui.components.task_list.PersonalTaskList
 import com.example.nfc_task.ui.components.task_list.StatisticsPage
 import com.example.nfc_task.ui.components.task_list.TeamTaskList
@@ -55,15 +60,14 @@ val screenItems = listOf(
 fun TaskAppHome(
     onTaskItemClick: () -> Unit,
     onWriteClick: () -> Unit,
-    hasTaskProcess: Boolean,
-    currentTaskTime: Int,
-    isRunning: Boolean,
     onFinishTask: () -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
     onBottomTaskControllerClick: () -> Unit,
-    onSaveNewTaskClick: (String, String) -> Unit
+    onSaveNewTaskClick: (String, String) -> Unit,
+    uiState: TaskUiState,
+    onCloseWritingClick: () -> Unit
 ) {
 
     var showBottomSheet by remember { mutableStateOf(false) }
@@ -89,16 +93,12 @@ fun TaskAppHome(
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
 
-        // Personal page and team page navigation
-//        val taskListNavController = rememberNavController()
-//        val taskListNavBackStackEntry by taskListNavController.currentBackStackEntryAsState()
-//        val taskListCurrentDestination = taskListNavBackStackEntry?.destination
-
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
         Scaffold(
             containerColor = MaterialTheme.colorScheme.surface,
-            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
+            modifier = Modifier
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
                 TaskAppTopBar(
                     titleText = stringResource(R.string.title_task_list),
@@ -146,6 +146,7 @@ fun TaskAppHome(
                                         restoreState = true
                                     }
                                 },
+//                                backgroundColor = MaterialTheme.colorScheme.surfaceBright,
                                 modifier = Modifier
                                     .width(140.dp)
                             )
@@ -180,9 +181,9 @@ fun TaskAppHome(
                         }
                     },
                     onAddTaskBtnClick = { showBottomSheet = true },
-                    hasTaskProcess = hasTaskProcess,
-                    isRunning = isRunning,
-                    currentTaskTime = currentTaskTime,
+                    hasTaskProcess = uiState.hasTaskProcess,
+                    isRunning = uiState.isRunning,
+                    currentTaskTime = uiState.currentTaskTime,
                     onFinishTask = onFinishTask,
                     onTerminateTask = onTerminateTask,
                     onPauseTask = onPauseTask,
@@ -215,13 +216,20 @@ fun TaskAppHome(
     }
 
     if (showBottomSheet) {
-        ModalBottomSheet(shape = MaterialTheme.shapes.large,
-            containerColor = MaterialTheme.colorScheme.background,
+        ModalBottomSheet(
+//            windowInsets = WindowInsets(0, 0, 0, 0),
+            windowInsets = WindowInsets.statusBars,
+            shape = RoundedCornerShape(
+                topStart = 24.dp,
+                topEnd = 24.dp,
+            ),
+            containerColor = MaterialTheme.colorScheme.surfaceBright,
 //            modifier = Modifier.fillMaxHeight(),
             modifier = Modifier.height(600.dp),
             sheetState = sheetState,
             onDismissRequest = { showBottomSheet = false }) {
             AddTaskComponent(
+                writingState = uiState.writeState,
                 onCloseClick = {
                     showBottomSheet = false
                 },
@@ -234,7 +242,10 @@ fun TaskAppHome(
 
                     showBottomSheet = false
                 },
-                onWriteClick = onWriteClick
+                onWriteClick = onWriteClick,
+                onCloseWritingClick = onCloseWritingClick,
+                modifier = Modifier
+                    .safeDrawingPadding()
             )
         }
     }
@@ -247,9 +258,6 @@ fun TaskAppPreview() {
         TaskAppHome(
             onTaskItemClick = {},
             onWriteClick = {},
-            hasTaskProcess = true,
-            currentTaskTime = 0,
-            isRunning = true,
             onFinishTask = {},
             onTerminateTask = {},
             onPauseTask = {},
@@ -257,7 +265,9 @@ fun TaskAppPreview() {
             onBottomTaskControllerClick = {},
             onSaveNewTaskClick = { _, _ ->
 
-            }
+            },
+            uiState = TaskUiState(),
+            onCloseWritingClick = {}
         )
     }
 }
