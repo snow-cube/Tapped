@@ -4,11 +4,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.nfc_task"
+    namespace = "me.snowcube.tapped"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.example.nfc_task"
+        applicationId = "me.snowcube.tapped"
         minSdk = 24
         targetSdk = 34
         versionCode = 1

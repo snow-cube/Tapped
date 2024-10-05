@@ -18,7 +18,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NFCTask"
+        android:theme="@style/Theme.Tapped"
         tools:targetApi="31">
         <service
             android:name=".TaskService"
@@ -29,11 +29,11 @@
         </service>
 
         <activity
-            android:name=".MainActivity"
+            android:name="me.snowcube.tapped.MainActivity"
             android:launchMode="singleTask"
             android:exported="true"
             android:windowSoftInputMode="adjustResize"
-            android:theme="@style/Theme.NFCTask">
+            android:theme="@style/Theme.Tapped">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -43,7 +43,7 @@
             <intent-filter>
                 <action android:name="android.nfc.action.NDEF_DISCOVERED" />
                 <category android:name="android.intent.category.DEFAULT" />
-                <data android:mimeType="application/vnd.com.example.nfc_task" />
+                <data android:mimeType="application/vnd.me.snowcube.tapped" />
             </intent-filter>
 
 <!--            <intent-filter>-->

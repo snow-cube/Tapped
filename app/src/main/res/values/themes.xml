@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-<!--    <style name="Theme.NFCTask" parent="android:Theme.Material.Light.NoActionBar" />-->
-    <style name="Theme.NFCTask" parent="android:Theme.Material.Light.NoActionBar.TranslucentDecor" />
+    <style name="Theme.Tapped" parent="android:Theme.Material.Light.NoActionBar">
+<!--        <item name="android:windowTranslucentNavigation">true</item>-->
+        <!-- change navigation bar color -->
+<!--        <item name="android:navigationBarColor">-->
+<!--            @android:color/transparent-->
+<!--        </item>-->
+
+<!--        &lt;!&ndash; change status bar color &ndash;&gt;-->
+<!--        <item name="android:statusBarColor">-->
+<!--            @android:color/transparent-->
+<!--        </item>-->
+    </style>
+<!--    <style name="Theme.Tapped" parent="android:Theme.Material.Light.NoActionBar.TranslucentDecor" />-->
 </resources>

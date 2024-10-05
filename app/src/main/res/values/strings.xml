@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">NFC-Task</string>
+    <string name="app_name">一拍</string>
 
     <string name="bottom_task_list">任务</string>
     <string name="bottom_statistics">统计</string>

@@ -19,5 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "NFC-Task"
+rootProject.name = "Tapped"
 include(":app")
