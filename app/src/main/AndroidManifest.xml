@@ -11,6 +11,7 @@
     <uses-feature android:name="android.hardware.nfc" android:required="true" />
 
     <application
+        android:name=".MainApplication"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -20,11 +21,12 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Tapped"
         tools:targetApi="31">
+
         <service
             android:name=".TaskService"
             android:foregroundServiceType="specialUse"
             android:enabled="true"
-            android:exported="true"
+            android:exported="false"
             android:permission="TODO">
         </service>
 

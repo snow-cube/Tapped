@@ -1,4 +1,4 @@
-package me.snowcube.tapped.ui.components
+package me.snowcube.tapped.ui.components.widgets
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.RowScope

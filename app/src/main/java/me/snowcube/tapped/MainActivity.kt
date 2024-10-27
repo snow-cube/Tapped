@@ -9,7 +9,6 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.content.ServiceConnection
-import android.graphics.Color
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Build
@@ -17,8 +16,6 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.IBinder
 import android.util.Log
-import android.view.View
-import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -27,15 +24,14 @@ import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import me.snowcube.tapped.data.Task
+import dagger.hilt.android.AndroidEntryPoint
 import me.snowcube.tapped.models.TappedAppViewModel
-import me.snowcube.tapped.models.WriteState
+import me.snowcube.tapped.models.NfcWritingState
 import me.snowcube.tapped.tools.NfcManager
 import me.snowcube.tapped.ui.components.TaskApp
-import me.snowcube.tapped.ui.components.task_list.folders
 import me.snowcube.tapped.ui.theme.TappedTheme
 
-
+@AndroidEntryPoint()
 class MainActivity : ComponentActivity() {
 
     private val viewModel: TappedAppViewModel by viewModels()
@@ -99,7 +95,6 @@ class MainActivity : ComponentActivity() {
             TappedTheme {
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                 TaskApp( // TODO: 也许之后可以把 uiState 直接传递，或者在 TaskApp 里再分流
-                    uiState = uiState,
                     onStartNewTask = createTaskProcess,
                     onFinishTask = finishTaskProcess,
                     onTerminateTask = terminateTaskProcess,
@@ -110,37 +105,29 @@ class MainActivity : ComponentActivity() {
                         // TODO: UI 部分也应对 NFC 是否可用做出检查
                         if (nfcManager != null && nfcManager!!.nfcAvailable) {
                             nfcManager?.setPendingMsgToWrite("testtaskid")
-                            viewModel.setWritingState(WriteState.Writing)
+                            viewModel.setWritingState(NfcWritingState.Writing)
                         } else {
                             Toast.makeText(this, "NFC is not available", Toast.LENGTH_LONG)
                                 .show()
                         }
                     },
+                    uiState = uiState,
                     onCloseWritingClick = {
                         nfcManager?.clearPendingMsgToWrite()
-                        viewModel.setWritingState(WriteState.Closed)
+                        viewModel.setWritingState(NfcWritingState.Closed)
                     },
-                    onSaveNewTaskClick = { taskName, taskTime ->
-                        folders[0].add(
-                            0,
-                            Task(
-                                inNfcManner = true,
-                                isPeriod = false,
-                                isRepeat = false,
-                                taskName = taskName,
-                                taskTime = taskTime,
-                            ),
-                        )
-                    })
+                    updateAddTaskUiState = viewModel::updateAddTaskUiState,
+                    saveTask = viewModel::saveTask
+                )
             }
         }
 
-        // 小米文档提供虚拟键透明方法，不干扰原生系统的手势提示线样式
-        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
-        window.statusBarColor = Color.TRANSPARENT
-        window.navigationBarColor = Color.TRANSPARENT
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        // 小米文档提供虚拟键透明方法，不干扰原生系统的手势提示线样式 TODO: 失效
+//        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+//        window.statusBarColor = Color.TRANSPARENT
+//        window.navigationBarColor = Color.TRANSPARENT
+//        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or
+//                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
 
         nfcManager = NfcManager(context = this)
 
@@ -190,7 +177,7 @@ class MainActivity : ComponentActivity() {
             val tag: Tag? = intent.getParcelableExtra(NfcAdapter.EXTRA_TAG)
             if (nfcManager?.hasPendingMsgToWrite() == true) {
                 nfcManager?.writePendingMsg(tag, this)
-                viewModel.setWritingState(WriteState.Succeeded)
+                viewModel.setWritingState(NfcWritingState.Succeeded)
             }
         }
     }

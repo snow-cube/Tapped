@@ -33,7 +33,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import me.snowcube.tapped.data.Task
+import me.snowcube.tapped.data.source.local.Task
+import me.snowcube.tapped.ui.theme.StateColor
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
 import me.snowcube.tapped.ui.theme.variantsColor
@@ -41,10 +42,10 @@ import me.snowcube.tapped.ui.theme.variantsColor
 @Composable
 fun TaskListBody(onTaskItemClick: () -> Unit, folders: List<List<Task>>) {
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier
             .padding(
-                top = 10.dp,
+                top = 5.dp,
                 start = 10.dp,
                 end = 10.dp,
                 bottom = 0.dp
@@ -173,18 +174,18 @@ private fun TaskItem(
         horizontalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Surface(
-            color = task.stateColor,
+            color = StateColor.Normal.color,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
                 .width(5.dp)
-                .height(60.dp)
+                .height(54.dp)
         ) { }
         Surface(
             onClick = onTaskItemClick,
             color = MaterialTheme.colorScheme.surface,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
-                .height(60.dp)
+                .height(54.dp)
         ) {
             Column(
                 verticalArrangement = Arrangement.SpaceEvenly,
@@ -205,21 +206,20 @@ private fun TaskItem(
                     Text(
                         "${if (task.inNfcManner) "NFC" else "普通"}" +
                                 " | ${if (task.isPeriod) "持续" else "即时"}" +
-                                "${if (task.isRepeat) " | 重复" else ""}",
+                                "${if (true) " | 重复" else ""}",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.labelMedium
                     )
 
                     Text(
                         task.taskTime,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.labelMedium
                     )
                 }
 //                HorizontalDivider()
                 Text(
-                    task.taskName,
-                    lineHeight = 30.sp,
+                    task.taskTitle,
                     color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold

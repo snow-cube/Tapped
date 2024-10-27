@@ -1,4 +1,4 @@
-package me.snowcube.tapped.ui.components
+package me.snowcube.tapped.ui.components.widgets
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row

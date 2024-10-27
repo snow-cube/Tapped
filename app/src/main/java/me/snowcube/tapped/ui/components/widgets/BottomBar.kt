@@ -1,4 +1,4 @@
-package me.snowcube.tapped.ui.components
+package me.snowcube.tapped.ui.components.widgets
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.BorderStroke
@@ -45,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.snowcube.tapped.R
+import me.snowcube.tapped.ui.components.HomeScreen
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
 
@@ -177,7 +178,10 @@ private fun BottomTaskController(
                 vertical = 0.dp, horizontal = 20.dp
             )
         ) {
-            Column(modifier.width(230.dp)) {
+            Column(
+                modifier.width(230.dp),
+                verticalArrangement = Arrangement.spacedBy(3.dp)
+            ) {
                 Text(
                     "NFC · 测试任务 1",
                     overflow = TextOverflow.Ellipsis,

@@ -1,7 +1,7 @@
 package me.snowcube.tapped.ui.components.task_list
 
 import androidx.compose.runtime.Composable
-import me.snowcube.tapped.data.Task
+import me.snowcube.tapped.data.source.local.Task
 
 
 val folders = mutableListOf(
@@ -9,29 +9,25 @@ val folders = mutableListOf(
         Task(
             inNfcManner = true,
             isPeriod = true,
-            isRepeat = false,
-            taskName = "测试任务1",
+            taskTitle = "测试任务1",
             taskTime = "9/17 19:00 - 19:20",
         ),
         Task(
             inNfcManner = true,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "测试任务2一次性",
+            taskTitle = "测试任务2一次性",
             taskTime = "9/18 18:30",
         ),
         Task(
             inNfcManner = true,
             isPeriod = true,
-            isRepeat = true,
-            taskName = "测试任务重复执行",
+            taskTitle = "测试任务重复执行",
             taskTime = "9/17 21:00 - 21:20",
         ),
         Task(
             inNfcManner = false,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "测试任务3非NFC",
+            taskTitle = "测试任务3非NFC",
             taskTime = "9/20 20:00",
         )
     ),
@@ -39,8 +35,7 @@ val folders = mutableListOf(
         Task(
             inNfcManner = true,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "Task name example",
+            taskTitle = "Task name example",
             taskTime = "9/17 15:00",
         ),
     ),
@@ -48,22 +43,19 @@ val folders = mutableListOf(
         Task(
             inNfcManner = false,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "任务不重复一次性",
+            taskTitle = "任务不重复一次性",
             taskTime = "9/17 18:20",
         ),
         Task(
             inNfcManner = false,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "task name",
+            taskTitle = "task name",
             taskTime = "9/17 18:30",
         ),
         Task(
             inNfcManner = false,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "测试任务",
+            taskTitle = "测试任务",
             taskTime = "9/20 20:00",
         )
     )

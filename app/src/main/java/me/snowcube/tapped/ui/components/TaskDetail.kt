@@ -89,7 +89,7 @@ fun TaskDetail(
                     ) {
                         Text(
                             taskStateText,
-                            style = MaterialTheme.typography.headlineMedium,
+                            style = MaterialTheme.typography.displaySmall,
                             color = Color.White,
                         )
                         Spacer(Modifier.height(15.dp))

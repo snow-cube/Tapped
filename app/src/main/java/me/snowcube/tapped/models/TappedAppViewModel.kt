@@ -1,12 +1,16 @@
 package me.snowcube.tapped.models
 
 import androidx.lifecycle.ViewModel
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import me.snowcube.tapped.data.TasksRepository
+import me.snowcube.tapped.data.source.local.Task
+import javax.inject.Inject
 
-enum class WriteState {
+enum class NfcWritingState {
     Closed,
     Writing,
     Succeeded,
@@ -22,10 +26,36 @@ data class TappedUiState(
     val taskCnt: Int = 0,
     val accumulatedTime: Int = 0,
 
-    val writeState: WriteState = WriteState.Closed
+    val nfcWritingState: NfcWritingState = NfcWritingState.Closed,
+
+    val addTaskUiState: AddTaskUiState = AddTaskUiState(),
 )
 
-class TappedAppViewModel : ViewModel() {
+data class AddTaskUiState(
+    val selectedTime: Pair<Int, Int>? = null,
+    val beginDateSelected: Long? = null,
+    val endDateSelected: Long? = null,
+    val taskTitle: String = "",
+    val taskDescription: String = "",
+    val switchSelected: String = "NFC"
+)
+
+fun AddTaskUiState.inNfcManner(): Boolean = switchSelected == "NFC"
+
+/**
+ * Extension function to convert [AddTaskUiState] to [Task].
+ */
+fun AddTaskUiState.toTask(): Task = Task(
+    taskTitle = taskTitle,
+    taskTime = "",
+    inNfcManner = inNfcManner(),
+    isPeriod = false
+)
+
+@HiltViewModel
+class TappedAppViewModel @Inject constructor (
+    private val tasksRepository: TasksRepository
+) : ViewModel() {
 
     // Expose screen UI state
     private val _uiState = MutableStateFlow(TappedUiState())
@@ -58,14 +88,22 @@ class TappedAppViewModel : ViewModel() {
         }
     }
 
-    fun saveTask() {
-        // TODO: Save task
+    suspend fun saveTask() {
+        tasksRepository.insertTask(uiState.value.addTaskUiState.toTask())
     }
 
-    fun setWritingState(state: WriteState) {
+    fun setWritingState(state: NfcWritingState) {
         _uiState.update { currentState ->
             currentState.copy(
-                writeState = state
+                nfcWritingState = state
+            )
+        }
+    }
+
+    fun updateAddTaskUiState(addTaskUiState: AddTaskUiState) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                addTaskUiState = addTaskUiState
             )
         }
     }

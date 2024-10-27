@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import me.snowcube.tapped.data.Task
+import me.snowcube.tapped.data.source.local.Task
 import me.snowcube.tapped.ui.theme.TappedTheme
 
 
@@ -28,15 +28,13 @@ val folders2 = mutableListOf(
         Task(
             inNfcManner = false,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "小组任务 1",
+            taskTitle = "小组任务 1",
             taskTime = "9/17 18:30",
         ),
         Task(
             inNfcManner = false,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "测试任务",
+            taskTitle = "测试任务",
             taskTime = "9/20 20:00",
         ),
 
@@ -45,8 +43,7 @@ val folders2 = mutableListOf(
         Task(
             inNfcManner = true,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "Task name example",
+            taskTitle = "Task name example",
             taskTime = "9/17 15:00",
         ),
     ),
@@ -54,29 +51,25 @@ val folders2 = mutableListOf(
         Task(
             inNfcManner = false,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "任务不重复一次性",
+            taskTitle = "任务不重复一次性",
             taskTime = "9/17 18:20",
         ),
         Task(
             inNfcManner = true,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "测试任务2一次性",
+            taskTitle = "测试任务2一次性",
             taskTime = "9/18 18:30",
         ),
         Task(
             inNfcManner = true,
             isPeriod = true,
-            isRepeat = true,
-            taskName = "测试任务重复执行",
+            taskTitle = "测试任务重复执行",
             taskTime = "9/17 21:00 - 21:20",
         ),
         Task(
             inNfcManner = false,
             isPeriod = false,
-            isRepeat = false,
-            taskName = "测试任务3非NFC",
+            taskTitle = "测试任务3非NFC",
             taskTime = "9/20 20:00",
         )
     )
@@ -101,11 +94,11 @@ fun TeamInfoBoard() {
             .fillMaxWidth()
             .padding(
                 horizontal = 20.dp,
-                vertical = 10.dp
+                vertical = 7.dp
             ) // 外边距
             .clickable { },
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 10.dp
+            defaultElevation = 7.dp
         ),
     ) {
         Column(

@@ -35,7 +35,7 @@ private val LightColorScheme = lightColorScheme(
     surfaceDim = Color(0xFFE8E8E8),
 
     onSurface = Color.Black,
-    onSurfaceVariant = Color(0xFF666666),
+    onSurfaceVariant = Color(0xFF888888),
 
     primaryContainer = Color(0xFFB68BF5),
     onPrimaryContainer = Color.White,
