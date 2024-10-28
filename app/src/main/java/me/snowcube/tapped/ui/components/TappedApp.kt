@@ -6,9 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import me.snowcube.tapped.models.AddTaskUiState
 import me.snowcube.tapped.models.TappedUiState
-import kotlin.reflect.KSuspendFunction0
 
 enum class TappedAppScreen {
     Home,
@@ -18,17 +16,15 @@ enum class TappedAppScreen {
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun TaskApp(
+fun TappedApp(
     onStartNewTask: () -> Unit,
     onFinishTask: () -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
     onWriteClick: () -> Unit,
-    uiState: TappedUiState,
+    tappedUiState: TappedUiState,
     onCloseWritingClick: () -> Unit,
-    updateAddTaskUiState: (AddTaskUiState) -> Unit,
-    saveTask: suspend () -> Unit,
 ) {
     val taskAppNavController = rememberNavController()
     NavHost(
@@ -36,7 +32,7 @@ fun TaskApp(
         startDestination = TappedAppScreen.Home.name
     ) {
         composable(route = TappedAppScreen.Home.name) {
-            TaskAppHome(
+            TappedAppHome(
                 onTaskItemClick = {
                     taskAppNavController.navigate(TappedAppScreen.TaskDetail.name)
                 },
@@ -48,15 +44,13 @@ fun TaskApp(
                 onBottomTaskControllerClick = {
                     taskAppNavController.navigate(TappedAppScreen.TaskDetail.name)
                 },
-                uiState = uiState,
+                tappedUiState = tappedUiState,
                 onCloseWritingClick = onCloseWritingClick,
-                updateAddTaskUiState = updateAddTaskUiState,
-                saveTask = saveTask
             )
         }
         composable(route = TappedAppScreen.TaskDetail.name) {
             TaskDetail(
-                uiState = uiState,
+                uiState = tappedUiState,
                 onStartNewTask = onStartNewTask,
                 onContinueTask = onContinueTask,
                 onFinishTask = onFinishTask,

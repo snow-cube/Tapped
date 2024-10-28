@@ -1,6 +1,7 @@
 [versions]
-agp = "8.6.0"
+agp = "8.7.1"
 hilt = "2.50"
+hiltNavigationCompose = "1.2.0"
 kotlin = "1.9.0"
 coreKtx = "1.13.1"
 junit = "4.13.2"
@@ -15,6 +16,7 @@ roomVersion = "2.6.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-navigation-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navVersion" }
 androidx-navigation-navigation-compose3 = { module = "androidx.navigation:navigation-compose", version.ref = "navVersion" }
 androidx-navigation-ui = { module = "androidx.navigation:navigation-ui", version.ref = "navVersion" }

@@ -28,7 +28,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import me.snowcube.tapped.models.TappedAppViewModel
 import me.snowcube.tapped.models.NfcWritingState
 import me.snowcube.tapped.tools.NfcManager
-import me.snowcube.tapped.ui.components.TaskApp
+import me.snowcube.tapped.ui.components.TappedApp
 import me.snowcube.tapped.ui.theme.TappedTheme
 
 @AndroidEntryPoint()
@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             TappedTheme {
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                TaskApp( // TODO: 也许之后可以把 uiState 直接传递，或者在 TaskApp 里再分流
+                TappedApp( // TODO: 也许之后可以把 uiState 直接传递，或者在 TaskApp 里再分流
                     onStartNewTask = createTaskProcess,
                     onFinishTask = finishTaskProcess,
                     onTerminateTask = terminateTaskProcess,
@@ -111,13 +111,11 @@ class MainActivity : ComponentActivity() {
                                 .show()
                         }
                     },
-                    uiState = uiState,
+                    tappedUiState = uiState,
                     onCloseWritingClick = {
                         nfcManager?.clearPendingMsgToWrite()
                         viewModel.setWritingState(NfcWritingState.Closed)
                     },
-                    updateAddTaskUiState = viewModel::updateAddTaskUiState,
-                    saveTask = viewModel::saveTask
                 )
             }
         }

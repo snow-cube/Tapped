@@ -29,6 +29,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +39,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -49,7 +52,7 @@ import me.snowcube.tapped.ui.components.task_list.PersonalTaskList
 import me.snowcube.tapped.ui.components.task_list.StatisticsPage
 import me.snowcube.tapped.ui.components.task_list.TeamTaskList
 import kotlinx.coroutines.launch
-import me.snowcube.tapped.models.AddTaskUiState
+import me.snowcube.tapped.models.TappedAppHomeViewModel
 import me.snowcube.tapped.ui.components.widgets.AddTaskComponent
 import me.snowcube.tapped.ui.components.widgets.BottomBar
 import me.snowcube.tapped.ui.components.widgets.TappedAppTopBar
@@ -63,7 +66,7 @@ val screenItems = listOf(
 @RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TaskAppHome(
+fun TappedAppHome(
     onTaskItemClick: () -> Unit,
     onWriteClick: () -> Unit,
     onFinishTask: () -> Unit,
@@ -71,11 +74,13 @@ fun TaskAppHome(
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
     onBottomTaskControllerClick: () -> Unit,
-    uiState: TappedUiState,
+    tappedUiState: TappedUiState,
     onCloseWritingClick: () -> Unit,
-    updateAddTaskUiState: (AddTaskUiState) -> Unit,
-    saveTask: suspend () -> Unit,
+    viewModel: TappedAppHomeViewModel = hiltViewModel()
 ) {
+
+    val homeUiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val taskListUiState by viewModel.taskListUiState.collectAsState()
 
     var showBottomSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(
@@ -193,9 +198,9 @@ fun TaskAppHome(
                         }
                     },
                     onAddTaskBtnClick = { showBottomSheet = true },
-                    hasTaskProcess = uiState.hasTaskProcess,
-                    isRunning = uiState.isRunning,
-                    currentTaskTime = uiState.currentTaskTime,
+                    hasTaskProcess = tappedUiState.hasTaskProcess,
+                    isRunning = tappedUiState.isRunning,
+                    currentTaskTime = tappedUiState.currentTaskTime,
                     onFinishTask = onFinishTask,
                     onTerminateTask = onTerminateTask,
                     onPauseTask = onPauseTask,
@@ -213,7 +218,10 @@ fun TaskAppHome(
                     startDestination = TaskListEnv.Personal.name
                 ) {
                     composable(route = TaskListEnv.Personal.name) {
-                        PersonalTaskList(onTaskItemClick = onTaskItemClick)
+                        PersonalTaskList(
+                            taskList = taskListUiState.taskList,
+                            onTaskItemClick = onTaskItemClick
+                        )
                     }
                     composable(route = TaskListEnv.Team.name) {
                         TeamTaskList(onTaskItemClick = onTaskItemClick)
@@ -241,8 +249,7 @@ fun TaskAppHome(
             sheetState = sheetState,
             onDismissRequest = { showBottomSheet = false }) {
             AddTaskComponent(
-                nfcWritingState = uiState.nfcWritingState,
-                saveTask = saveTask,
+                nfcWritingState = tappedUiState.nfcWritingState,
                 quitComponent = {
                     // TODO: Reset UI states
                     // 该工作不能在组件内部进行，因为部分组件的应用场景中退出时不应重置 UI State，如修改已有任务
@@ -251,8 +258,9 @@ fun TaskAppHome(
                 },
                 onWriteClick = onWriteClick,
                 onCloseWritingClick = onCloseWritingClick,
-                addTaskUiState = uiState.addTaskUiState,
-                updateAddTaskUiState = updateAddTaskUiState,
+                addTaskUiState = homeUiState.addTaskUiState,
+                updateAddTaskUiState = viewModel::updateAddTaskUiState,
+                saveTask = viewModel::saveTask,
                 modifier = Modifier
                     .safeDrawingPadding()
             )
@@ -265,7 +273,7 @@ fun TaskAppHome(
 @Composable
 fun TaskAppPreview() {
     TappedTheme() {
-        TaskAppHome(
+        TappedAppHome(
             onTaskItemClick = {},
             onWriteClick = {},
             onFinishTask = {},
@@ -273,10 +281,8 @@ fun TaskAppPreview() {
             onPauseTask = {},
             onContinueTask = {},
             onBottomTaskControllerClick = {},
-            uiState = TappedUiState(),
+            tappedUiState = TappedUiState(),
             onCloseWritingClick = {},
-            updateAddTaskUiState = {},
-            saveTask = suspend {}
         )
     }
 }

@@ -7,7 +7,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import me.snowcube.tapped.data.TasksRepository
-import me.snowcube.tapped.data.source.local.Task
 import javax.inject.Inject
 
 enum class NfcWritingState {
@@ -27,29 +26,6 @@ data class TappedUiState(
     val accumulatedTime: Int = 0,
 
     val nfcWritingState: NfcWritingState = NfcWritingState.Closed,
-
-    val addTaskUiState: AddTaskUiState = AddTaskUiState(),
-)
-
-data class AddTaskUiState(
-    val selectedTime: Pair<Int, Int>? = null,
-    val beginDateSelected: Long? = null,
-    val endDateSelected: Long? = null,
-    val taskTitle: String = "",
-    val taskDescription: String = "",
-    val switchSelected: String = "NFC"
-)
-
-fun AddTaskUiState.inNfcManner(): Boolean = switchSelected == "NFC"
-
-/**
- * Extension function to convert [AddTaskUiState] to [Task].
- */
-fun AddTaskUiState.toTask(): Task = Task(
-    taskTitle = taskTitle,
-    taskTime = "",
-    inNfcManner = inNfcManner(),
-    isPeriod = false
 )
 
 @HiltViewModel
@@ -88,22 +64,10 @@ class TappedAppViewModel @Inject constructor (
         }
     }
 
-    suspend fun saveTask() {
-        tasksRepository.insertTask(uiState.value.addTaskUiState.toTask())
-    }
-
     fun setWritingState(state: NfcWritingState) {
         _uiState.update { currentState ->
             currentState.copy(
                 nfcWritingState = state
-            )
-        }
-    }
-
-    fun updateAddTaskUiState(addTaskUiState: AddTaskUiState) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                addTaskUiState = addTaskUiState
             )
         }
     }

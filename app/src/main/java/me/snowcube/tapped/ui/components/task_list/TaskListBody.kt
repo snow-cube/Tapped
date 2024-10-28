@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -40,7 +41,11 @@ import me.snowcube.tapped.ui.theme.paletteColor
 import me.snowcube.tapped.ui.theme.variantsColor
 
 @Composable
-fun TaskListBody(onTaskItemClick: () -> Unit, folders: List<List<Task>>) {
+fun TaskListBody(
+    onTaskItemClick: () -> Unit,
+    taskList: List<List<Task>>
+) {
+
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier
@@ -58,26 +63,11 @@ fun TaskListBody(onTaskItemClick: () -> Unit, folders: List<List<Task>>) {
                 folderName = "任务分组 1",
                 themeColor = variantsColor[0],
                 onTaskItemClick = onTaskItemClick,
-                tasks = folders[0]
-            )
-        }
-        item {
-            TaskFolder(
-                folderName = "Folder 2",
-                themeColor = variantsColor[1],
-                onTaskItemClick = onTaskItemClick,
-                tasks = folders[1]
-            )
-        }
-        item {
-            TaskFolder(
-                folderName = "Test Folder",
-                themeColor = variantsColor[2],
-                onTaskItemClick = onTaskItemClick,
-                tasks = folders[2]
+                tasks = taskList[0]
             )
         }
     }
+
 }
 
 /* TODO: Maybe later it will be passed to folder component the folder object directly rather than
@@ -89,7 +79,9 @@ private fun TaskFolder(
     onTaskItemClick: () -> Unit,
     tasks: List<Task>
 ) {
-    var folded by remember { mutableStateOf(false) }
+//    val initialFolded = tasks.isEmpty()
+    val initialFolded = false
+    var folded by remember { mutableStateOf(initialFolded) }
 
     Surface(
         color = MaterialTheme.colorScheme.surfaceBright,
@@ -144,20 +136,29 @@ private fun TaskFolder(
                 }
             }
             if (!folded) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(2.dp),
-                    modifier = Modifier.padding(
-                        top = 6.dp,
-                        start = 10.dp,
-                        end = 10.dp,
-                        bottom = 10.dp
+                if (tasks.isEmpty()) {
+                    Text(
+                        text = "无任务",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(20.dp)
                     )
-                ) {
-                    tasks.forEach() {
-                        TaskItem(
-                            task = it,
-                            onTaskItemClick = onTaskItemClick
+                } else {
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        modifier = Modifier.padding(
+                            top = 6.dp,
+                            start = 10.dp,
+                            end = 10.dp,
+                            bottom = 10.dp
                         )
+                    ) {
+                        tasks.forEach() {
+                            TaskItem(
+                                task = it,
+                                onTaskItemClick = onTaskItemClick
+                            )
+                        }
                     }
                 }
             }
@@ -233,6 +234,6 @@ private fun TaskItem(
 @Composable
 fun TaskListBodyPreview() {
     TappedTheme() {
-        TaskListBody(onTaskItemClick = {}, folders = folders)
+        TaskListBody(onTaskItemClick = {}, taskList = listOf(listOf()))
     }
 }
