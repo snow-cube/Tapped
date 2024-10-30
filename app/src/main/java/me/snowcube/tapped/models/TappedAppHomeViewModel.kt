@@ -41,7 +41,7 @@ fun AddTaskUiState.toTask(): Task = Task(
 )
 
 @HiltViewModel
-class TappedAppHomeViewModel @Inject constructor(
+open class TappedAppHomeViewModel @Inject constructor(
     private val tasksRepository: TasksRepository
 ) : ViewModel() {
 

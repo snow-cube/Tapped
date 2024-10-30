@@ -1,6 +1,7 @@
 package me.snowcube.tapped.data
 
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import me.snowcube.tapped.data.source.local.Task
 import me.snowcube.tapped.data.source.local.TaskDao
 import javax.inject.Inject
@@ -25,4 +26,19 @@ class DefaultTasksRepository @Inject constructor(
 
     override suspend fun updateTask(task: Task) = localDataSource.update(task)
 
+}
+
+@Singleton
+class FakeTasksRepository @Inject constructor(
+) : TasksRepository {
+
+    override fun getAllTasksStream(): Flow<List<Task>> = flowOf(listOf())
+
+    override fun getTaskStream(id: Int): Flow<Task?> = flowOf()
+
+    override suspend fun insertTask(task: Task) {}
+
+    override suspend fun deleteTask(task: Task) {}
+
+    override suspend fun updateTask(task: Task) {}
 }

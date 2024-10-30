@@ -47,12 +47,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navigation
+import kotlinx.coroutines.launch
+import me.snowcube.tapped.data.FakeTasksRepository
+import me.snowcube.tapped.models.TappedAppHomeViewModel
 import me.snowcube.tapped.models.TappedUiState
 import me.snowcube.tapped.ui.components.task_list.PersonalTaskList
 import me.snowcube.tapped.ui.components.task_list.StatisticsPage
 import me.snowcube.tapped.ui.components.task_list.TeamTaskList
-import kotlinx.coroutines.launch
-import me.snowcube.tapped.models.TappedAppHomeViewModel
 import me.snowcube.tapped.ui.components.widgets.AddTaskComponent
 import me.snowcube.tapped.ui.components.widgets.BottomBar
 import me.snowcube.tapped.ui.components.widgets.TappedAppTopBar
@@ -272,7 +273,7 @@ fun TappedAppHome(
 @Preview
 @Composable
 fun TaskAppPreview() {
-    TappedTheme() {
+    TappedTheme {
         TappedAppHome(
             onTaskItemClick = {},
             onWriteClick = {},
@@ -283,6 +284,7 @@ fun TaskAppPreview() {
             onBottomTaskControllerClick = {},
             tappedUiState = TappedUiState(),
             onCloseWritingClick = {},
+            viewModel = TappedAppHomeViewModel(tasksRepository = FakeTasksRepository())
         )
     }
 }

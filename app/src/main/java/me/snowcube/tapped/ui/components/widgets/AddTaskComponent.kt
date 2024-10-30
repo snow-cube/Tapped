@@ -68,13 +68,6 @@ fun AddTaskComponent(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
-//    var selectedTime: TimePickerState? by remember { mutableStateOf(null) }
-//    var selectedDate by remember { mutableStateOf<Long?>(null) }
-//    var taskTitle by remember { mutableStateOf("") }
-//    var taskDescription by remember { mutableStateOf("") }
-//    var switchSelected by remember { mutableStateOf("NFC") }
-//    val taskNfcEnabled = switchSelected == "NFC"
-
     Column(
         verticalArrangement = Arrangement.SpaceBetween,
         modifier = modifier
@@ -86,7 +79,7 @@ fun AddTaskComponent(
             .fillMaxHeight()
     ) {
         Column(
-//            verticalArrangement = Arrangement.spacedBy(0.dp)
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
@@ -111,7 +104,6 @@ fun AddTaskComponent(
                     selected = addTaskUiState.switchSelected,
                     btnList = listOf("NFC", "普通"),
                     onSelectedChanged = { updateAddTaskUiState(addTaskUiState.copy(switchSelected = it)) },
-                    backgroundColor = MaterialTheme.colorScheme.surface,
                     modifier = modifier
                         .width(120.dp)
                 )

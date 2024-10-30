@@ -20,6 +20,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimeInput
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.TimePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -50,16 +51,16 @@ fun TimePickerComponent(
 
     val timePickerState: TimePickerState =
         if (selectedTime == null) {
-            TimePickerState(
+            rememberTimePickerState(
                 initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
                 initialMinute = currentTime.get(Calendar.MINUTE),
-                is24Hour = true, // TODO: Enable to switch between 12 & 24 h
+                is24Hour = false, // TODO: Enable to switch between 12 & 24 h
             )
         } else {
-            TimePickerState(
+            rememberTimePickerState(
                 initialHour = selectedTime.first,
                 initialMinute = selectedTime.second,
-                is24Hour = true, // TODO: Enable to switch between 12 & 24 h
+                is24Hour = false, // TODO: Enable to switch between 12 & 24 h
             )
         }
 

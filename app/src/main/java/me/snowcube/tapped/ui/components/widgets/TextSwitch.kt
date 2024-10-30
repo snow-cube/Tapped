@@ -1,17 +1,25 @@
 package me.snowcube.tapped.ui.components.widgets
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -24,19 +32,18 @@ fun TextSwitch(
     btnList: List<String>,
     onSelectedChanged: (String) -> Unit,
     modifier: Modifier = Modifier,
-    backgroundColor: Color = MaterialTheme.colorScheme.surfaceDim,
-    color: Color = MaterialTheme.colorScheme.primary,
+    backgroundColor: Color = MaterialTheme.colorScheme.primary,
+    color: Color = MaterialTheme.colorScheme.surfaceBright,
 ) {
     Surface(
         color = backgroundColor,
-        shape = MaterialTheme.shapes.small,
+        shape = RoundedCornerShape(12.dp),
         modifier = modifier
-            .height(40.dp)
+            .background(color = backgroundColor, shape = RoundedCornerShape(14.dp))
+            .padding(2.dp)
+            .height(32.dp)
     ) {
-        Row(
-            modifier = modifier
-                .padding(3.dp)
-        ) {
+        Row {
             btnList.forEach() { btnName ->
                 TextSwitchBtn(
                     selected = selected == btnName,
@@ -48,6 +55,7 @@ fun TextSwitch(
                     modifier = modifier
                         .weight(1f)
                         .fillMaxWidth()
+                        .fillMaxHeight()
                 )
             }
         }
@@ -60,17 +68,17 @@ private fun TextSwitchBtn(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier,
-    color: Color
+    color: Color,
 ) {
     Button(
         onClick = onClick,
         colors = ButtonColors(
             containerColor = if (selected) color else Color.Transparent,
-            contentColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant,
+            contentColor = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
             disabledContainerColor = Color.Red,
             disabledContentColor = Color.White
         ),
-        shape = MaterialTheme.shapes.small,
+        shape = RoundedCornerShape(12.dp),
         contentPadding = PaddingValues(0.dp),
         modifier = modifier
     ) {

@@ -17,14 +17,44 @@ private val DarkColorScheme = darkColorScheme(
 //    surface = Color.Green
 )
 
+//private val LightColorScheme = lightColorScheme(
+//    primary = Color(0xFF8D4CD5),
+//    onPrimary = Color.White,
+//
+//    secondary = Color(0xFFC481F3),
+//    onSecondary = Color.White,
+//
+//    tertiary = Color(0xFFB9EBD3),
+//    onTertiary = Color.Black,
+//
+//    background = Color.Red,
+//    onBackground = Color.Green,
+//
+//    surface = Color(0xFFF5F5F5),
+//    surfaceBright = Color.White,
+//    surfaceDim = Color(0xFFE8E8E8),
+//
+//    onSurface = Color.Black,
+//    onSurfaceVariant = Color(0xFF888888),
+//
+//    primaryContainer = Color(0xFFB68BF5),
+//    onPrimaryContainer = Color.White,
+//
+//    secondaryContainer = Color(0xFFCCAAF1),
+//    onSecondaryContainer = Color.White,
+//
+//    tertiaryContainer = Color(0xFFF3E8F6),
+//    onTertiaryContainer = Color.Black,
+//)
+
 private val LightColorScheme = lightColorScheme(
-    primary = Color(0xFF8D4CD5),
+    primary = Color(0xFF323232),
     onPrimary = Color.White,
 
-    secondary = Color(0xFFC481F3),
+    secondary = Color(0xFF40E0D0),
     onSecondary = Color.White,
 
-    tertiary = Color(0xFFB9EBD3),
+    tertiary = Color(0xFFABEFDB),
     onTertiary = Color.Black,
 
     background = Color.Red,
@@ -33,17 +63,18 @@ private val LightColorScheme = lightColorScheme(
     surface = Color(0xFFF5F5F5),
     surfaceBright = Color.White,
     surfaceDim = Color(0xFFE8E8E8),
+    surfaceVariant = Color(0xFFE8E8E8),
 
     onSurface = Color.Black,
     onSurfaceVariant = Color(0xFF888888),
 
-    primaryContainer = Color(0xFFB68BF5),
+    primaryContainer = Color(0xFF40E0D0),
     onPrimaryContainer = Color.White,
 
-    secondaryContainer = Color(0xFFCCAAF1),
-    onSecondaryContainer = Color.White,
+    secondaryContainer = Color(0xFFABEFDB),
+    onSecondaryContainer = Color.Black,
 
-    tertiaryContainer = Color(0xFFF3E8F6),
+    tertiaryContainer = Color(0xFFD1F2EB),
     onTertiaryContainer = Color.Black,
 )
 

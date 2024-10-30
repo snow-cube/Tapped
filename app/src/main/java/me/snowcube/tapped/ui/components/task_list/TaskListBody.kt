@@ -14,6 +14,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
@@ -100,7 +102,7 @@ private fun TaskFolder(
 //                shape = MaterialTheme.shapes.medium,
                 color = themeColor,
                 modifier = Modifier
-                    .height(54.dp)
+                    .height(44.dp)
                     .fillMaxWidth()
             ) {
                 Row(
@@ -108,9 +110,25 @@ private fun TaskFolder(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.padding(
                         vertical = 0.dp,
-                        horizontal = 20.dp
+                        horizontal = 5.dp
                     )
                 ) {
+                    IconButton(
+                        onClick = {},
+                        colors = IconButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = Color.White,
+                            disabledContainerColor = Color.Transparent,
+                            disabledContentColor = paletteColor.invalidGrey
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Localized description",
+                            modifier = Modifier
+                                .size(25.dp)
+                        )
+                    }
                     Text(
                         folderName,
                         style = MaterialTheme.typography.titleMedium,
@@ -172,13 +190,13 @@ private fun TaskItem(
     task: Task
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(6.dp)
+        horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Surface(
             color = StateColor.Normal.color,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
-                .width(5.dp)
+                .width(6.dp)
                 .height(54.dp)
         ) { }
         Surface(
@@ -205,9 +223,9 @@ private fun TaskItem(
                 ) {
                     // TODO: Using chip to instead
                     Text(
-                        "${if (task.inNfcManner) "NFC" else "普通"}" +
+                        (if (task.inNfcManner) "NFC" else "普通") +
                                 " | ${if (task.isPeriod) "持续" else "即时"}" +
-                                "${if (true) " | 重复" else ""}",
+                                " | 重复",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelMedium
                     )
@@ -234,6 +252,25 @@ private fun TaskItem(
 @Composable
 fun TaskListBodyPreview() {
     TappedTheme() {
-        TaskListBody(onTaskItemClick = {}, taskList = listOf(listOf()))
+        TaskListBody(
+            onTaskItemClick = {},
+            taskList = listOf(
+                listOf(
+                    Task(
+                        1,
+                        "Task name",
+                        "",
+                        true,
+                        true
+                    ), Task(
+                        1,
+                        "Task name",
+                        "",
+                        true,
+                        true
+                    )
+                )
+            )
+        )
     }
 }
