@@ -68,9 +68,9 @@ fun BottomBar(
     Column(
         verticalArrangement = Arrangement.spacedBy(7.dp),
         modifier = modifier
-            .background(color = MaterialTheme.colorScheme.surface)
+//            .background(color = MaterialTheme.colorScheme.surface)
             .padding(
-                top = 5.dp, start = 10.dp, end = 10.dp, bottom = 5.dp
+                top = 7.dp, start = 10.dp, end = 10.dp, bottom = 5.dp
             )
             .windowInsetsPadding(WindowInsets.navigationBars)
     ) {

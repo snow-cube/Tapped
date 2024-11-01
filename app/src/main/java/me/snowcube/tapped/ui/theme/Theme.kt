@@ -60,7 +60,7 @@ private val LightColorScheme = lightColorScheme(
     background = Color.Red,
     onBackground = Color.Green,
 
-    surface = Color(0xFFF5F5F5),
+    surface = Color(0xFFF8F8F8),
     surfaceBright = Color.White,
     surfaceDim = Color(0xFFE8E8E8),
     surfaceVariant = Color(0xFFE8E8E8),

@@ -9,7 +9,7 @@ fun PersonalTaskList(
 ) {
     // TODO: 直接封装到一个 folder 中
     TaskListBody(
-        taskList = listOf(taskList),
+        taskList = listOf(taskList, taskList, taskList, taskList),
         onTaskItemClick = onTaskItemClick,
     )
 }

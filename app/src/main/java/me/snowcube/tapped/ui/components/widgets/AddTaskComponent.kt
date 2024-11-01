@@ -111,7 +111,7 @@ fun AddTaskComponent(
                     onClick = {
                         coroutineScope.launch {
                             saveTask()
-                            sleep(5000)
+//                            sleep(5000)
                             Toast.makeText(context, "保存成功", Toast.LENGTH_LONG).show()
                             quitComponent()
                         }

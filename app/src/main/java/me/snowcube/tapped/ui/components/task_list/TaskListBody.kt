@@ -11,10 +11,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,10 +32,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import me.snowcube.tapped.data.source.local.Task
 import me.snowcube.tapped.ui.theme.StateColor
 import me.snowcube.tapped.ui.theme.TappedTheme
@@ -47,7 +45,15 @@ fun TaskListBody(
     onTaskItemClick: () -> Unit,
     taskList: List<List<Task>>
 ) {
+    CommonView(taskList[0], onTaskItemClick)
+//    FolderView(taskList, onTaskItemClick)
+}
 
+@Composable
+private fun FolderView(
+    taskList: List<List<Task>>,
+    onTaskItemClick: () -> Unit
+) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier
@@ -60,16 +66,62 @@ fun TaskListBody(
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
     ) {
-        item {
+        items(items = taskList) {
             TaskFolder(
                 folderName = "任务分组 1",
                 themeColor = variantsColor[0],
                 onTaskItemClick = onTaskItemClick,
-                tasks = taskList[0]
+                tasks = it
             )
         }
     }
+}
 
+@Composable
+private fun CommonView(
+    taskList: List<Task>,
+    onTaskItemClick: () -> Unit
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceBright,
+        shape = MaterialTheme.shapes.medium,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                top = 5.dp,
+                start = 10.dp,
+                end = 10.dp,
+                bottom = 0.dp
+            )
+    ) {
+        if (taskList.isEmpty()) {
+            Text(
+                text = "无任务",
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.padding(20.dp)
+            )
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier
+//                    .fillMaxHeight()
+                    .padding(
+                        top = 12.dp,
+                        start = 10.dp,
+                        end = 10.dp,
+                        bottom = 12.dp
+                    )
+            ) {
+                items(taskList) {
+                    TaskItem(
+                        task = it,
+                        onTaskItemClick = onTaskItemClick
+                    )
+                }
+            }
+        }
+    }
 }
 
 /* TODO: Maybe later it will be passed to folder component the folder object directly rather than
@@ -163,12 +215,12 @@ private fun TaskFolder(
                     )
                 } else {
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(2.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.padding(
-                            top = 6.dp,
+                            top = 8.dp,
                             start = 10.dp,
                             end = 10.dp,
-                            bottom = 10.dp
+                            bottom = 12.dp
                         )
                     ) {
                         tasks.forEach() {
@@ -193,10 +245,11 @@ private fun TaskItem(
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Surface(
-            color = StateColor.Normal.color,
+            color = StateColor.entries[task.id % 4].color,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
-                .width(6.dp)
+//                .width(6.dp)
+                .width(54.dp)
                 .height(54.dp)
         ) { }
         Surface(
@@ -231,7 +284,8 @@ private fun TaskItem(
                     )
 
                     Text(
-                        task.taskTime,
+//                        task.taskTime,
+                        "20:39 2024/11/1",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelMedium
                     )
