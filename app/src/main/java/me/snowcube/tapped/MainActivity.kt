@@ -24,7 +24,10 @@ import androidx.activity.viewModels
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import me.snowcube.tapped.data.source.local.Task
 import me.snowcube.tapped.models.TappedAppViewModel
 import me.snowcube.tapped.models.NfcWritingState
 import me.snowcube.tapped.tools.NfcManager
@@ -94,9 +97,14 @@ class MainActivity : ComponentActivity() {
         setContent {
             TappedTheme {
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-                TappedApp( // TODO: 也许之后可以把 uiState 直接传递，或者在 TaskApp 里再分流
+                TappedApp(
                     onStartNewTask = createTaskProcess,
-                    onFinishTask = finishTaskProcess,
+                    finishTask = { taskId, isContinuous ->
+                        if (isContinuous) {
+                            finishTaskProcess()
+                        }
+                        viewModel.completeTask(taskId)
+                    },
                     onTerminateTask = terminateTaskProcess,
                     onPauseTask = pauseTask,
                     onContinueTask = startOrContinueTask,
@@ -120,7 +128,7 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // 小米文档提供虚拟键透明方法，不干扰原生系统的手势提示线样式 TODO: 失效 补充：主题色改为黑色后莫名其妙再次恢复透明
+        // 小米文档提供虚拟键透明方法，不干扰原生系统的手势提示线样式 TODO: 失效 补充：应是 HyperOS bug
 //        window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
 //        window.statusBarColor = Color.TRANSPARENT
 //        window.navigationBarColor = Color.TRANSPARENT
@@ -227,27 +235,32 @@ class MainActivity : ComponentActivity() {
 
     // TODO: 判断格式是否正确且是否是当前正在运行的任务，若是其他任务则提示是否终止或完成当前任务
     private fun handleNfcMessage() {
-        val nfcMsg: String
-        if (pendingNfcMessage != null) {
-            nfcMsg = pendingNfcMessage!!
-            pendingNfcMessage = null
+        lifecycleScope.launch {
+            val nfcMsg: String
+            if (pendingNfcMessage != null) {
+                nfcMsg = pendingNfcMessage!!
+                pendingNfcMessage = null
 
-            if (nfcMsg == "testtaskid") { // 格式正确
-                if (isBound || taskService?.hasTaskProcess == true) {
-                    if (true) { // ID 和当前进行中任务一致
-                        finishTaskProcess()
+                val taskId = nfcMsg.toInt()
+                val task = viewModel.getTask(taskId)
+
+                if (task != null) { // 格式正确，成功找到任务
+                    if (isBound || taskService?.hasTaskProcess == true) {
+                        if (taskService?.taskId == task.id) { // ID 和当前进行中任务一致
+                            finishTaskProcess()
+                        } else {
+                            // TODO: 警告并询问是否终止或完成当前任务
+                        }
                     } else {
-                        // 警告并询问是否终止或完成当前任务
+                        createTaskProcess(task)
                     }
-                } else {
-                    createTaskProcess()
                 }
             }
         }
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private val createTaskProcess: () -> Unit = {
+    private val createTaskProcess: (task: Task) -> Unit = {
         if (taskService != null || isBound) {
             // 已存在未结束的任务，必须先结束
             // UI 或 NFC 模块需事先检查是否存在未结束任务，需警告是否终止先前任务（非 NFC 任务也可正常结束）
@@ -257,7 +270,10 @@ class MainActivity : ComponentActivity() {
             // 未绑定到服务则认为没有进行中的任务
 
             // 新建 Service 并绑定
-            intent = Intent(this, TaskService::class.java)
+            intent = Intent(this, TaskService::class.java).apply {
+                putExtra("EXTRA_DATA_INT", it.id)
+                putExtra("EXTRA_DATA_STRING", it.taskTitle)
+            }
             startForegroundService(intent)
             bindService(intent, connection, BIND_ABOVE_CLIENT)
             isBound = true

@@ -37,7 +37,11 @@ fun AddTaskUiState.inNfcManner(): Boolean = switchSelected == "NFC"
  * Extension function to convert [AddTaskUiState] to [Task].
  */
 fun AddTaskUiState.toTask(): Task = Task(
-    taskTitle = taskTitle, taskTime = "", inNfcManner = inNfcManner(), isPeriod = false
+    taskTitle = taskTitle,
+    taskTime = "",
+    inNfcManner = inNfcManner(),
+    isContinuous = inNfcManner(), // TODO: 暂时将 NFC 任务设为持续，否则非持续
+    isCompleted = false
 )
 
 @HiltViewModel

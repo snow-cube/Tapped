@@ -59,7 +59,7 @@ fun BottomBar(
     hasTaskProcess: Boolean = false,
     isRunning: Boolean = false,
     currentTaskTime: Int = 0,
-    onFinishTask: () -> Unit,
+    finishTask: (taskId: Int, iisContinuous: Boolean) -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
@@ -79,7 +79,7 @@ fun BottomBar(
                 modifier = modifier,
                 isRunning = isRunning,
                 currentTaskTime = currentTaskTime,
-                onFinishTask = onFinishTask,
+                finishTask = finishTask,
                 onTerminateTask = onTerminateTask,
                 onPauseTask = onPauseTask,
                 onContinueTask = onContinueTask,
@@ -146,7 +146,7 @@ private fun BottomTaskController(
     modifier: Modifier,
     isRunning: Boolean,
     currentTaskTime: Int,
-    onFinishTask: () -> Unit,
+    finishTask: (taskId: Int, iisContinuous: Boolean) -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
@@ -218,7 +218,7 @@ private fun BottomTaskController(
                     )
                 }
                 IconButton(
-                    onClick = onFinishTask, // 若为 NFC 任务，应为终止
+                    onClick = { finishTask(true) }, // 若为 NFC 任务，应为终止
                     colors = IconButtonColors(
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.primary,
@@ -291,7 +291,7 @@ fun BottomNavigationBarPreview() {
             onItemClick = {},
             onAddTaskBtnClick = {},
             hasTaskProcess = true,
-            onFinishTask = {},
+            finishTask = { _, _ -> },
             onTerminateTask = {},
             onPauseTask = {},
             onContinueTask = {},

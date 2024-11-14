@@ -11,5 +11,6 @@ data class Task(
     @ColumnInfo(name = "task_title") val taskTitle: String,
     @ColumnInfo(name = "task_time") val taskTime: String,
     @ColumnInfo(name = "in_nfc_manner") val inNfcManner: Boolean,
-    @ColumnInfo(name = "is_period") val isPeriod: Boolean,
+    @ColumnInfo(name = "is_continuous") val isContinuous: Boolean,
+    @ColumnInfo(name = "is_completed") val isCompleted: Boolean,
 )

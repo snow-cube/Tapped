@@ -32,6 +32,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import me.snowcube.tapped.data.source.local.Task
@@ -42,8 +43,7 @@ import me.snowcube.tapped.ui.theme.variantsColor
 
 @Composable
 fun TaskListBody(
-    onTaskItemClick: () -> Unit,
-    taskList: List<List<Task>>
+    onTaskItemClick: (taskId: Int) -> Unit, taskList: List<List<Task>>
 ) {
     CommonView(taskList[0], onTaskItemClick)
 //    FolderView(taskList, onTaskItemClick)
@@ -51,17 +51,12 @@ fun TaskListBody(
 
 @Composable
 private fun FolderView(
-    taskList: List<List<Task>>,
-    onTaskItemClick: () -> Unit
+    taskList: List<List<Task>>, onTaskItemClick: (taskId: Int) -> Unit
 ) {
     LazyColumn(
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-        modifier = Modifier
+        verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier
             .padding(
-                top = 5.dp,
-                start = 10.dp,
-                end = 10.dp,
-                bottom = 0.dp
+                top = 5.dp, start = 10.dp, end = 10.dp, bottom = 0.dp
             )
             .fillMaxWidth()
             .clip(MaterialTheme.shapes.medium)
@@ -79,8 +74,7 @@ private fun FolderView(
 
 @Composable
 private fun CommonView(
-    taskList: List<Task>,
-    onTaskItemClick: () -> Unit
+    taskList: List<Task>, onTaskItemClick: (taskId: Int) -> Unit
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceBright,
@@ -88,10 +82,7 @@ private fun CommonView(
         modifier = Modifier
             .fillMaxWidth()
             .padding(
-                top = 5.dp,
-                start = 10.dp,
-                end = 10.dp,
-                bottom = 0.dp
+                top = 5.dp, start = 10.dp, end = 10.dp, bottom = 0.dp
             )
     ) {
         if (taskList.isEmpty()) {
@@ -103,20 +94,15 @@ private fun CommonView(
             )
         } else {
             LazyColumn(
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier
+                verticalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier
 //                    .fillMaxHeight()
                     .padding(
-                        top = 12.dp,
-                        start = 10.dp,
-                        end = 10.dp,
-                        bottom = 12.dp
+                        top = 12.dp, start = 10.dp, end = 10.dp, bottom = 12.dp
                     )
             ) {
                 items(taskList) {
                     TaskItem(
-                        task = it,
-                        onTaskItemClick = onTaskItemClick
+                        task = it, onTaskItemClick = onTaskItemClick
                     )
                 }
             }
@@ -128,10 +114,7 @@ private fun CommonView(
  separate properties */
 @Composable
 private fun TaskFolder(
-    folderName: String,
-    themeColor: Color,
-    onTaskItemClick: () -> Unit,
-    tasks: List<Task>
+    folderName: String, themeColor: Color, onTaskItemClick: (taskId: Int) -> Unit, tasks: List<Task>
 ) {
 //    val initialFolded = tasks.isEmpty()
     val initialFolded = false
@@ -143,17 +126,14 @@ private fun TaskFolder(
         modifier = Modifier
             .fillMaxWidth()
             .border(
-                color = themeColor,
-                width = 1.dp,
-                shape = MaterialTheme.shapes.medium
+                color = themeColor, width = 1.dp, shape = MaterialTheme.shapes.medium
             )
     ) {
         Column {
             Surface(
                 onClick = { folded = !folded },
 //                shape = MaterialTheme.shapes.medium,
-                color = themeColor,
-                modifier = Modifier
+                color = themeColor, modifier = Modifier
                     .height(44.dp)
                     .fillMaxWidth()
             ) {
@@ -161,13 +141,11 @@ private fun TaskFolder(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.SpaceBetween,
                     modifier = Modifier.padding(
-                        vertical = 0.dp,
-                        horizontal = 5.dp
+                        vertical = 0.dp, horizontal = 5.dp
                     )
                 ) {
                     IconButton(
-                        onClick = {},
-                        colors = IconButtonColors(
+                        onClick = {}, colors = IconButtonColors(
                             containerColor = Color.Transparent,
                             contentColor = Color.White,
                             disabledContainerColor = Color.Transparent,
@@ -177,8 +155,7 @@ private fun TaskFolder(
                         Icon(
                             imageVector = Icons.Default.MoreVert,
                             contentDescription = "Localized description",
-                            modifier = Modifier
-                                .size(25.dp)
+                            modifier = Modifier.size(25.dp)
                         )
                     }
                     Text(
@@ -188,8 +165,7 @@ private fun TaskFolder(
                         color = Color.White
                     )
                     IconButton(
-                        onClick = { folded = !folded },
-                        colors = IconButtonColors(
+                        onClick = { folded = !folded }, colors = IconButtonColors(
                             containerColor = Color.Transparent,
                             contentColor = Color.White,
                             disabledContainerColor = Color.Transparent,
@@ -199,8 +175,7 @@ private fun TaskFolder(
                         Icon(
                             imageVector = if (folded) Icons.AutoMirrored.Filled.KeyboardArrowLeft else Icons.Filled.KeyboardArrowDown,
                             contentDescription = "Localized description",
-                            modifier = Modifier
-                                .size(30.dp)
+                            modifier = Modifier.size(30.dp)
                         )
                     }
                 }
@@ -217,16 +192,12 @@ private fun TaskFolder(
                     Column(
                         verticalArrangement = Arrangement.spacedBy(4.dp),
                         modifier = Modifier.padding(
-                            top = 8.dp,
-                            start = 10.dp,
-                            end = 10.dp,
-                            bottom = 12.dp
+                            top = 8.dp, start = 10.dp, end = 10.dp, bottom = 12.dp
                         )
                     ) {
                         tasks.forEach() {
                             TaskItem(
-                                task = it,
-                                onTaskItemClick = onTaskItemClick
+                                task = it, onTaskItemClick = onTaskItemClick
                             )
                         }
                     }
@@ -238,8 +209,7 @@ private fun TaskFolder(
 
 @Composable
 private fun TaskItem(
-    onTaskItemClick: () -> Unit,
-    task: Task
+    onTaskItemClick: (taskId: Int) -> Unit, task: Task
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(5.dp)
@@ -248,37 +218,32 @@ private fun TaskItem(
             color = StateColor.entries[task.id % 4].color,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
-//                .width(6.dp)
-                .width(54.dp)
+                .width(6.dp)
+//                .width(54.dp)
                 .height(54.dp)
         ) { }
         Surface(
-            onClick = onTaskItemClick,
+            onClick = { onTaskItemClick(task.id) },
             color = MaterialTheme.colorScheme.surface,
             shape = MaterialTheme.shapes.small,
-            modifier = Modifier
-                .height(54.dp)
+            modifier = Modifier.height(54.dp)
         ) {
             Column(
                 verticalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier
                     .fillMaxHeight()
                     .padding(
-                        vertical = 4.dp,
-                        horizontal = 15.dp
+                        vertical = 4.dp, horizontal = 15.dp
                     )
 
             ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier
-                        .fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth()
                 ) {
                     // TODO: Using chip to instead
                     Text(
-                        (if (task.inNfcManner) "NFC" else "普通") +
-                                " | ${if (task.isPeriod) "持续" else "即时"}" +
-                                " | 重复",
+                        (if (task.inNfcManner) "NFC" else "普通") + " | ${if (task.isPeriod) "持续" else "即时"}" + " | 重复",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelMedium
                     )
@@ -293,9 +258,11 @@ private fun TaskItem(
 //                HorizontalDivider()
                 Text(
                     task.taskTitle,
-                    color = MaterialTheme.colorScheme.onSurface,
+                    color = if (task.isCompleted) MaterialTheme.colorScheme.onSurfaceVariant
+                    else MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    textDecoration = if (task.isCompleted) TextDecoration.LineThrough else TextDecoration.None
                 )
             }
         }
@@ -307,21 +274,22 @@ private fun TaskItem(
 fun TaskListBodyPreview() {
     TappedTheme() {
         TaskListBody(
-            onTaskItemClick = {},
-            taskList = listOf(
+            onTaskItemClick = {}, taskList = listOf(
                 listOf(
                     Task(
                         1,
                         "Task name",
                         "",
-                        true,
-                        true
+                        inNfcManner = true,
+                        isPeriod = true,
+                        isCompleted = false,
                     ), Task(
-                        1,
-                        "Task name",
+                        2,
+                        "Task name 2",
                         "",
-                        true,
-                        true
+                        inNfcManner = false,
+                        isPeriod = true,
+                        isCompleted = true
                     )
                 )
             )

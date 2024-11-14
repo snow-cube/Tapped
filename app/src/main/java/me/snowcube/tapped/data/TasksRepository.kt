@@ -31,4 +31,6 @@ interface TasksRepository {
      * Update task in the data source
      */
     suspend fun updateTask(task: Task)
+
+    suspend fun completeTask(taskId: Int)
 }

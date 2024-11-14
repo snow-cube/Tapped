@@ -26,6 +26,7 @@ class DefaultTasksRepository @Inject constructor(
 
     override suspend fun updateTask(task: Task) = localDataSource.update(task)
 
+    override suspend fun completeTask(taskId: Int) = localDataSource.updateCompleted(taskId, true)
 }
 
 @Singleton
@@ -41,4 +42,6 @@ class FakeTasksRepository @Inject constructor(
     override suspend fun deleteTask(task: Task) {}
 
     override suspend fun updateTask(task: Task) {}
+
+    override suspend fun completeTask(taskId: Int) {}
 }

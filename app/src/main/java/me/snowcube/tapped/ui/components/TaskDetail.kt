@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -31,20 +32,28 @@ import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import me.snowcube.tapped.R
+import me.snowcube.tapped.models.RunningTaskUiState
 import me.snowcube.tapped.models.TappedUiState
+import me.snowcube.tapped.models.TaskDetailViewModel
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
 
 @Composable
 fun TaskDetail(
-    onStartNewTask: () -> Unit,
-    onFinishTask: () -> Unit,
+    onStartNewTask: (taskId: Int) -> Unit,
+    finishTask: (taskId: Int, isContinuous: Boolean) -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
-    uiState: TappedUiState
+    tappedUiState: TappedUiState,
+    viewModel: TaskDetailViewModel = hiltViewModel(),
+    taskId: Int
 ) {
+    // TaskDetail 的编辑任务 UI State 应和新建任务的分开，互不干扰
+
     // 须通过 Service 返回的状态控制按钮的 enable 状态
     // 若按钮 enabled 点击后会尝试调用服务接口
     // 开始新任务 按钮在未找到服务时会尝试创建服务并绑定
@@ -53,23 +62,26 @@ fun TaskDetail(
     // TODO: 终止 / 完成 同时只显示一个，终止按钮发出警告
     // TODO: 开始新任务 / 暂停 / 继续 同时只显示一个
 
-    val taskStateText = if (uiState.hasTaskProcess)
-        if (uiState.isRunning) "进行中" else "暂停中"
-    else "未开始"
-    val formattedTime = DateUtils.formatElapsedTime(uiState.currentTaskTime.toLong())
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val formattedAccumulatedTime = DateUtils.formatElapsedTime(uiState.accumulatedTime.toLong())
+    val taskStateText =
+        if (tappedUiState.hasTaskProcess) if (tappedUiState.runningTaskUiState.isRunning) "进行中" else "暂停中"
+        else "未开始"
+    val formattedTime =
+        DateUtils.formatElapsedTime(tappedUiState.runningTaskUiState.currentTaskTime.toLong())
 
-    val stateColor = if (uiState.hasTaskProcess)
-        if (uiState.isRunning) paletteColor.backgroundGreen else paletteColor.backgroundYellow
-    else paletteColor.backgroundBlue
+    val formattedAccumulatedTime =
+        DateUtils.formatElapsedTime(tappedUiState.runningTaskUiState.accumulatedTime.toLong())
+
+    val stateColor =
+        if (tappedUiState.hasTaskProcess) if (tappedUiState.runningTaskUiState.isRunning) paletteColor.backgroundGreen else paletteColor.backgroundYellow
+        else paletteColor.backgroundBlue
 
     Scaffold(
         containerColor = stateColor,
     ) { innerPadding ->
         Surface(
-            color = stateColor,
-            modifier = Modifier.padding(innerPadding)
+            color = stateColor, modifier = Modifier.padding(innerPadding)
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -107,7 +119,7 @@ fun TaskDetail(
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Text(
-                        "累计次数 ${uiState.taskCnt}    |    累计时间 $formattedAccumulatedTime",
+                        "累计次数 ${tappedUiState.runningTaskUiState.taskCnt}    |    累计时间 $formattedAccumulatedTime",
                         style = MaterialTheme.typography.titleMedium,
                         color = Color.White,
                     )
@@ -126,11 +138,11 @@ fun TaskDetail(
                     IconButton(
                         enabled = true,
                         onClick = {
-                            if (!uiState.hasTaskProcess) {
-                                onStartNewTask()
+                            if (!tappedUiState.hasTaskProcess) {
+                                onStartNewTask(taskId)
                             } else {
                                 if (true /* TODO: 是本任务 */) {
-                                    if (uiState.isRunning) {
+                                    if (tappedUiState.runningTaskUiState.isRunning) {
                                         onPauseTask()
                                     } else {
                                         onContinueTask()
@@ -150,20 +162,20 @@ fun TaskDetail(
 //                            .padding(50.dp)
                     ) {
                         Icon(
-                            imageVector = if (uiState.hasTaskProcess && uiState.isRunning /* TODO: 并且是本任务 */)
-                                ImageVector.vectorResource(R.drawable.baseline_pause_24)
+                            imageVector = if (tappedUiState.hasTaskProcess && tappedUiState.runningTaskUiState.isRunning /* TODO: 并且是本任务 */) ImageVector.vectorResource(
+                                R.drawable.baseline_pause_24
+                            )
                             else Icons.Default.PlayArrow,
                             contentDescription = "Start / Pause / Continue",
-                            modifier = Modifier
-                                .fillMaxSize()
+                            modifier = Modifier.fillMaxSize()
 //                                .size(120.dp)
                         )
                     }
                     IconButton(
-                        enabled = uiState.hasTaskProcess, // TODO: 事实上还需要运行任务是此任务
+                        enabled = tappedUiState.hasTaskProcess, // TODO: 事实上还需要运行任务是此任务
                         onClick = {
                             if (true /* TODO: 非 NFC */) {
-                                onFinishTask()
+                                uiState.task?.let { finishTask(taskId, it.isContinuous) }
                             } else {
                                 onTerminateTask()
                             }
@@ -176,12 +188,10 @@ fun TaskDetail(
 //                        modifier = Modifier.size(80.dp)
                     ) {
                         Icon(
-                            imageVector = if (true /* TODO: 非 NFC */)
-                                Icons.Default.Done
+                            imageVector = if (true /* TODO: 非 NFC */) Icons.Default.Done
                             else ImageVector.vectorResource(R.drawable.baseline_stop_24),
                             contentDescription = "Finish / Terminate",
-                            modifier = Modifier
-                                .fillMaxSize()
+                            modifier = Modifier.fillMaxSize()
 //                                .size(70.dp)
                         )
                     }
@@ -197,16 +207,19 @@ private fun TaskDetailRunningPreview() {
     TappedTheme() {
         TaskDetail(
             onStartNewTask = {},
-            onFinishTask = {},
+            finishTask = { _, _ -> },
             onTerminateTask = {},
             onPauseTask = {},
             onContinueTask = {},
-            uiState = TappedUiState(
+            tappedUiState = TappedUiState(
                 hasTaskProcess = true,
-                isRunning = true,
-                taskCnt = 1,
-                accumulatedTime = 110
-            )
+                runningTaskUiState = RunningTaskUiState(
+                    isRunning = true,
+                    taskCnt = 1,
+                    accumulatedTime = 110
+                ),
+            ),
+            taskId = 0
         )
     }
 }
@@ -217,16 +230,19 @@ private fun TaskDetailPausedPreview() {
     TappedTheme() {
         TaskDetail(
             onStartNewTask = {},
-            onFinishTask = {},
+            finishTask = { _, _ -> },
             onTerminateTask = {},
             onPauseTask = {},
             onContinueTask = {},
-            uiState = TappedUiState(
+            tappedUiState = TappedUiState(
                 hasTaskProcess = true,
-                isRunning = false,
-                taskCnt = 2,
-                accumulatedTime = 130
-            )
+                runningTaskUiState = RunningTaskUiState(
+                    isRunning = false,
+                    taskCnt = 2,
+                    accumulatedTime = 130
+                ),
+            ),
+            taskId = 0
         )
     }
 }
@@ -237,16 +253,19 @@ private fun TaskDetailNotActivePreview() {
     TappedTheme() {
         TaskDetail(
             onStartNewTask = {},
-            onFinishTask = {},
+            finishTask = { _, _ -> },
             onTerminateTask = {},
             onPauseTask = {},
             onContinueTask = {},
-            uiState = TappedUiState(
+            tappedUiState = TappedUiState(
                 hasTaskProcess = false,
-                isRunning = false,
-                taskCnt = 2,
-                accumulatedTime = 130
-            )
+                runningTaskUiState = RunningTaskUiState(
+                    isRunning = false,
+                    taskCnt = 2,
+                    accumulatedTime = 130
+                ),
+            ),
+            taskId = 0
         )
     }
 }

@@ -14,6 +14,10 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
 
 class TaskService : Service() {
+    var taskId: Int? = null
+        private set
+    var taskTitle: String? = null
+        private set
     private val binder = TaskBinder()  // Binder对象，用于提供服务的控制接口
     private val handler = Handler()
     private var counter = 0
@@ -59,7 +63,8 @@ class TaskService : Service() {
             val intent = Intent(this, MainActivity::class.java).apply {
                 flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             }
-            val pendingIntent: PendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
+            val pendingIntent: PendingIntent =
+                PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
             val notification = NotificationCompat.Builder(this, "CHANNEL_ID")
                 .setSmallIcon(R.drawable.ic_launcher_foreground)
@@ -121,6 +126,9 @@ class TaskService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        taskId = intent?.getIntExtra("EXTRA_DATA_INT", 0)
+        taskTitle = intent?.getStringExtra("EXTRA_DATA_STRING") ?: "Unknown task"
+
         startForeground()
         hasTaskProcess = true
         startOrContinueTask()

@@ -68,9 +68,9 @@ val screenItems = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TappedAppHome(
-    onTaskItemClick: () -> Unit,
+    onTaskItemClick: (taskId: Int) -> Unit,
     onWriteClick: () -> Unit,
-    onFinishTask: () -> Unit,
+    finishTask: (taskId: Int, iisContinuous: Boolean) -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
@@ -200,9 +200,9 @@ fun TappedAppHome(
                     },
                     onAddTaskBtnClick = { showBottomSheet = true },
                     hasTaskProcess = tappedUiState.hasTaskProcess,
-                    isRunning = tappedUiState.isRunning,
-                    currentTaskTime = tappedUiState.currentTaskTime,
-                    onFinishTask = onFinishTask,
+                    isRunning = tappedUiState.runningTaskUiState.isRunning,
+                    currentTaskTime = tappedUiState.runningTaskUiState.currentTaskTime,
+                    finishTask = finishTask,
                     onTerminateTask = onTerminateTask,
                     onPauseTask = onPauseTask,
                     onContinueTask = onContinueTask,
@@ -277,7 +277,7 @@ fun TaskAppPreview() {
         TappedAppHome(
             onTaskItemClick = {},
             onWriteClick = {},
-            onFinishTask = {},
+            finishTask = {_, _ -> },
             onTerminateTask = {},
             onPauseTask = {},
             onContinueTask = {},

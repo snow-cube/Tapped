@@ -6,19 +6,31 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
+import kotlinx.serialization.Serializable
 import me.snowcube.tapped.models.TappedUiState
 
-enum class TappedAppScreen {
-    Home,
-    TaskDetail,
-    Login
-}
+//enum class TappedAppScreen {
+//    Home,
+//    TaskDetail,
+//    Login
+//}
+
+@Serializable
+object HomeRoute
+
+@Serializable
+data class TaskDetailRoute(val taskId: Int)
+
+@Serializable
+object LoginRoute
+
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TappedApp(
-    onStartNewTask: () -> Unit,
-    onFinishTask: () -> Unit,
+    onStartNewTask: (taskId: Int) -> Unit,
+    finishTask: (taskId: Int, isContinuous: Boolean) -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
@@ -29,36 +41,38 @@ fun TappedApp(
     val taskAppNavController = rememberNavController()
     NavHost(
         navController = taskAppNavController,
-        startDestination = TappedAppScreen.Home.name
+        startDestination = HomeRoute
     ) {
-        composable(route = TappedAppScreen.Home.name) {
+        composable<HomeRoute> {
             TappedAppHome(
-                onTaskItemClick = {
-                    taskAppNavController.navigate(TappedAppScreen.TaskDetail.name)
+                onTaskItemClick = { taskId ->
+                    taskAppNavController.navigate(TaskDetailRoute(taskId))
                 },
                 onWriteClick = onWriteClick,
-                onFinishTask = onFinishTask,
+                finishTask = finishTask,
                 onTerminateTask = onTerminateTask,
                 onPauseTask = onPauseTask,
                 onContinueTask = onContinueTask,
-                onBottomTaskControllerClick = {
-                    taskAppNavController.navigate(TappedAppScreen.TaskDetail.name)
+                onBottomTaskControllerClick = { taskId ->
+                    taskAppNavController.navigate(TaskDetailRoute(taskId))
                 },
                 tappedUiState = tappedUiState,
                 onCloseWritingClick = onCloseWritingClick,
             )
         }
-        composable(route = TappedAppScreen.TaskDetail.name) {
+        composable<TaskDetailRoute> { backStackEntry ->
+            val taskId: Int = backStackEntry.toRoute()
             TaskDetail(
-                uiState = tappedUiState,
+                taskId = taskId,
+                tappedUiState = tappedUiState,
                 onStartNewTask = onStartNewTask,
                 onContinueTask = onContinueTask,
-                onFinishTask = onFinishTask,
+                finishTask = finishTask,
                 onTerminateTask = onTerminateTask,
                 onPauseTask = onPauseTask
             )
         }
-        composable(route = TappedAppScreen.Login.name) {
+        composable<LoginRoute> {
             LoginPage()
         }
     }
