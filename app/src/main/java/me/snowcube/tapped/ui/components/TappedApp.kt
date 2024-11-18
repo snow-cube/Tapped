@@ -1,6 +1,7 @@
 package me.snowcube.tapped.ui.components
 
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
@@ -8,6 +9,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
+import me.snowcube.tapped.data.source.local.Task
 import me.snowcube.tapped.models.TappedUiState
 
 //enum class TappedAppScreen {
@@ -29,8 +31,9 @@ object LoginRoute
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun TappedApp(
-    onStartNewTask: (taskId: Int) -> Unit,
-    finishTask: (taskId: Int, isContinuous: Boolean) -> Unit,
+    onStartNewTask: (task: Task) -> Unit,
+    finishTaskProcess: () -> Unit,
+    completeTask: (taskId: Int) -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
@@ -49,7 +52,8 @@ fun TappedApp(
                     taskAppNavController.navigate(TaskDetailRoute(taskId))
                 },
                 onWriteClick = onWriteClick,
-                finishTask = finishTask,
+                finishTaskProcess = finishTaskProcess,
+                completeTask = completeTask,
                 onTerminateTask = onTerminateTask,
                 onPauseTask = onPauseTask,
                 onContinueTask = onContinueTask,
@@ -61,15 +65,17 @@ fun TappedApp(
             )
         }
         composable<TaskDetailRoute> { backStackEntry ->
-            val taskId: Int = backStackEntry.toRoute()
+            Log.d("TappedApp", "Before toRoute()")
+            val route: TaskDetailRoute = backStackEntry.toRoute()
+            Log.d("TappedApp", "After toRoute()")
             TaskDetail(
-                taskId = taskId,
                 tappedUiState = tappedUiState,
                 onStartNewTask = onStartNewTask,
                 onContinueTask = onContinueTask,
-                finishTask = finishTask,
+                finishTaskProcess = finishTaskProcess,
+                completeTask = completeTask,
                 onTerminateTask = onTerminateTask,
-                onPauseTask = onPauseTask
+                onPauseTask = onPauseTask,
             )
         }
         composable<LoginRoute> {

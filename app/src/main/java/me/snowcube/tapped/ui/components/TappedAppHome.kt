@@ -70,11 +70,12 @@ val screenItems = listOf(
 fun TappedAppHome(
     onTaskItemClick: (taskId: Int) -> Unit,
     onWriteClick: () -> Unit,
-    finishTask: (taskId: Int, iisContinuous: Boolean) -> Unit,
+    finishTaskProcess: () -> Unit,
+    completeTask: (taskId: Int) -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
-    onBottomTaskControllerClick: () -> Unit,
+    onBottomTaskControllerClick: (taskId: Int) -> Unit,
     tappedUiState: TappedUiState,
     onCloseWritingClick: () -> Unit,
     viewModel: TappedAppHomeViewModel = hiltViewModel()
@@ -199,10 +200,9 @@ fun TappedAppHome(
                         }
                     },
                     onAddTaskBtnClick = { showBottomSheet = true },
-                    hasTaskProcess = tappedUiState.hasTaskProcess,
-                    isRunning = tappedUiState.runningTaskUiState.isRunning,
-                    currentTaskTime = tappedUiState.runningTaskUiState.currentTaskTime,
-                    finishTask = finishTask,
+                    tappedUiState = tappedUiState,
+                    finishTaskProcess = finishTaskProcess,
+                    completeTask = completeTask,
                     onTerminateTask = onTerminateTask,
                     onPauseTask = onPauseTask,
                     onContinueTask = onContinueTask,
@@ -277,7 +277,8 @@ fun TaskAppPreview() {
         TappedAppHome(
             onTaskItemClick = {},
             onWriteClick = {},
-            finishTask = {_, _ -> },
+            finishTaskProcess = {},
+            completeTask = {},
             onTerminateTask = {},
             onPauseTask = {},
             onContinueTask = {},

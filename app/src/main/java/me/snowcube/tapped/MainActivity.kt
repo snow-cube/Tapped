@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
 
 //                Log.d("msgUpdater", "Update data from service")
 
-                handler.postDelayed(this, 1000)  // 每1秒执行一次
+                handler.postDelayed(this, 1000)  // 每 1 秒执行一次
             }
         }
     }
@@ -67,6 +67,9 @@ class MainActivity : ComponentActivity() {
             taskService = binder.getService()  // 获取到 TaskService 的实例
             isBound = true
             handler.post(runnable)  // 开始定期获取数据
+
+            // 绑定服务后，根据服务的 taskId 从数据库获取任务基本信息（如应用重新启动后只能从服务得知任务 ID）
+            taskService?.taskId?.let { viewModel.updateRunningTaskInfo(it) }
 
             if (pendingNfcMessage != null) {
                 Log.d("TaskApp.MainActivity", "Handle NFC message when service connected")
@@ -94,17 +97,16 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            window.isNavigationBarContrastEnforced = false
+        }
         setContent {
             TappedTheme {
                 val uiState by viewModel.uiState.collectAsStateWithLifecycle()
                 TappedApp(
                     onStartNewTask = createTaskProcess,
-                    finishTask = { taskId, isContinuous ->
-                        if (isContinuous) {
-                            finishTaskProcess()
-                        }
-                        viewModel.completeTask(taskId)
-                    },
+                    finishTaskProcess = finishTaskProcess,
+                    completeTask = viewModel::completeTask,
                     onTerminateTask = terminateTaskProcess,
                     onPauseTask = pauseTask,
                     onContinueTask = startOrContinueTask,

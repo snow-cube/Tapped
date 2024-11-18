@@ -243,7 +243,7 @@ private fun TaskItem(
                 ) {
                     // TODO: Using chip to instead
                     Text(
-                        (if (task.inNfcManner) "NFC" else "普通") + " | ${if (task.isPeriod) "持续" else "即时"}" + " | 重复",
+                        (if (task.inNfcManner) "NFC" else "普通") + " | ${if (task.isContinuous) "持续" else "即时"}" + " | 重复",
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         style = MaterialTheme.typography.labelMedium
                     )
@@ -281,14 +281,14 @@ fun TaskListBodyPreview() {
                         "Task name",
                         "",
                         inNfcManner = true,
-                        isPeriod = true,
+                        isContinuous = true,
                         isCompleted = false,
                     ), Task(
                         2,
                         "Task name 2",
                         "",
                         inNfcManner = false,
-                        isPeriod = true,
+                        isContinuous = true,
                         isCompleted = true
                     )
                 )

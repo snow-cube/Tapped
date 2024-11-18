@@ -38,6 +38,8 @@ data class RunningTaskUiState(
 fun Task.toRunningTaskUiState(): RunningTaskUiState {
     return RunningTaskUiState(
         taskId = this.id,
+//        taskCnt =
+//        accumulatedTime =
     )
 }
 

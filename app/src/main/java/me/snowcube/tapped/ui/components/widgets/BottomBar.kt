@@ -45,6 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.snowcube.tapped.R
+import me.snowcube.tapped.models.TappedUiState
 import me.snowcube.tapped.ui.components.HomeScreen
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
@@ -56,15 +57,15 @@ fun BottomBar(
     onItemClick: (targetRoute: String) -> Unit,
     modifier: Modifier = Modifier,
     onAddTaskBtnClick: () -> Unit,
-    hasTaskProcess: Boolean = false,
-    isRunning: Boolean = false,
-    currentTaskTime: Int = 0,
-    finishTask: (taskId: Int, iisContinuous: Boolean) -> Unit,
+    tappedUiState: TappedUiState,
+    finishTaskProcess: () -> Unit,
+    completeTask: (taskId: Int) -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
-    onBottomTaskControllerClick: () -> Unit
-) {
+    onBottomTaskControllerClick: (taskId: Int) -> Unit,
+
+    ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(7.dp),
         modifier = modifier
@@ -74,16 +75,17 @@ fun BottomBar(
             )
             .windowInsetsPadding(WindowInsets.navigationBars)
     ) {
-        if (hasTaskProcess) {
+        if (tappedUiState.hasTaskProcess) {
             BottomTaskController(
                 modifier = modifier,
-                isRunning = isRunning,
-                currentTaskTime = currentTaskTime,
-                finishTask = finishTask,
+                isRunning = tappedUiState.runningTaskUiState.isRunning,
+                currentTaskTime = tappedUiState.runningTaskUiState.currentTaskTime,
+                finishTaskProcess = finishTaskProcess,
+                completeTask = completeTask,
                 onTerminateTask = onTerminateTask,
                 onPauseTask = onPauseTask,
                 onContinueTask = onContinueTask,
-                onClick = onBottomTaskControllerClick
+                onClick = { onBottomTaskControllerClick(tappedUiState.runningTaskUiState.taskId) }
             )
         }
 
@@ -146,7 +148,8 @@ private fun BottomTaskController(
     modifier: Modifier,
     isRunning: Boolean,
     currentTaskTime: Int,
-    finishTask: (taskId: Int, iisContinuous: Boolean) -> Unit,
+    finishTaskProcess: () -> Unit,
+    completeTask: (taskId: Int) -> Unit,
     onTerminateTask: () -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
@@ -218,7 +221,7 @@ private fun BottomTaskController(
                     )
                 }
                 IconButton(
-                    onClick = { finishTask(true) }, // 若为 NFC 任务，应为终止
+                    onClick = finishTaskProcess, // TODO: 若为 NFC 任务，应为终止
                     colors = IconButtonColors(
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.primary,
@@ -290,12 +293,13 @@ fun BottomNavigationBarPreview() {
             currentScreenRoute = "statistics",
             onItemClick = {},
             onAddTaskBtnClick = {},
-            hasTaskProcess = true,
-            finishTask = { _, _ -> },
+            finishTaskProcess = {},
+            completeTask = {},
             onTerminateTask = {},
             onPauseTask = {},
             onContinueTask = {},
-            onBottomTaskControllerClick = {}
+            onBottomTaskControllerClick = {},
+            tappedUiState = TappedUiState()
         )
     }
 }
