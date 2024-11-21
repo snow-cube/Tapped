@@ -12,6 +12,7 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.ServiceCompat
+import me.snowcube.tapped.models.TaskProcessRecord
 
 class TaskService : Service() {
     var taskId: Int? = null
@@ -20,6 +21,8 @@ class TaskService : Service() {
         private set
     private val binder = TaskBinder()  // Binder对象，用于提供服务的控制接口
     private val handler = Handler()
+    var startTime = 0L // TODO: 根据开始时间纠正任务计时 可存储为一系列小时段的列表，精确计时只需计算最后一个时段的已进行时间
+        private set
     private var counter = 0
     var isRunning = false
         private set
@@ -184,16 +187,14 @@ class TaskService : Service() {
         pauseTimer()
     }
 
-    fun terminateTaskProcess() {
-        stopTimer()
-        hasTaskProcess = false
-    }
-
     // TODO: 后续可返回更详细的运行结果信息
-    fun finishTaskProcess(): Int {
+    fun finishTaskProcess(): TaskProcessRecord {
         val runningTime = getCurrentTaskTime()
         stopTimer()
         hasTaskProcess = false
-        return runningTime
+        return TaskProcessRecord(
+            startTime = startTime,
+            endTime = runningTime.toLong()
+        )
     }
 }

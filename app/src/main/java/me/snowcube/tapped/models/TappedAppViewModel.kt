@@ -43,6 +43,16 @@ fun Task.toRunningTaskUiState(): RunningTaskUiState {
     )
 }
 
+// TODO: 应能够详细记录进程的暂停时间等信息
+// 任务时长通过开始结束暂停信息计算
+data class TaskProcessRecord(
+    val startTime: Long, // 暂时为 Long，后续应该会替代为库的时间段数据结构
+    val endTime: Long,
+) {
+    val runningTime: Long
+        get() = endTime - startTime
+}
+
 @HiltViewModel
 class TappedAppViewModel @Inject constructor(
     private val tasksRepository: TasksRepository
@@ -100,8 +110,21 @@ class TappedAppViewModel @Inject constructor(
             getTask(taskId)?.let {
                 _uiState.update { currentState ->
                     currentState.copy(
-                        runningTaskUiState = it.toRunningTaskUiState()
+                        runningTaskUiState = currentState.runningTaskUiState.copy(
+                            taskId = it.id
+                        )
                     )
+                }
+            }
+        }
+    }
+
+    // TODO: Temporary logic 应在数据层实现任务记录，更新任务记录并在更新记录方法中检查完成状态 *所有记录更新操作中都应包含对完成状态的检查而非由调用者检查*
+    fun performTaskOnce(taskId: Int, taskProcessRecord: TaskProcessRecord? = null) {
+        viewModelScope.launch {
+            getTask(taskId)?.let { task ->
+                if (!task.isRepetitive) {
+                    completeTask(taskId)
                 }
             }
         }

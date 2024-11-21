@@ -45,7 +45,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.snowcube.tapped.R
+import me.snowcube.tapped.models.RunningTaskUiState
 import me.snowcube.tapped.models.TappedUiState
+import me.snowcube.tapped.models.TaskProcessRecord
 import me.snowcube.tapped.ui.components.HomeScreen
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
@@ -58,17 +60,17 @@ fun BottomBar(
     modifier: Modifier = Modifier,
     onAddTaskBtnClick: () -> Unit,
     tappedUiState: TappedUiState,
-    finishTaskProcess: () -> Unit,
-    completeTask: (taskId: Int) -> Unit,
-    onTerminateTask: () -> Unit,
+    finishTaskProcess: () -> TaskProcessRecord?,
+    performTaskOnce: (
+        taskId: Int, taskProcessRecord: TaskProcessRecord?
+    ) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
     onBottomTaskControllerClick: (taskId: Int) -> Unit,
 
     ) {
     Column(
-        verticalArrangement = Arrangement.spacedBy(7.dp),
-        modifier = modifier
+        verticalArrangement = Arrangement.spacedBy(7.dp), modifier = modifier
 //            .background(color = MaterialTheme.colorScheme.surface)
             .padding(
                 top = 7.dp, start = 10.dp, end = 10.dp, bottom = 5.dp
@@ -76,17 +78,13 @@ fun BottomBar(
             .windowInsetsPadding(WindowInsets.navigationBars)
     ) {
         if (tappedUiState.hasTaskProcess) {
-            BottomTaskController(
-                modifier = modifier,
-                isRunning = tappedUiState.runningTaskUiState.isRunning,
-                currentTaskTime = tappedUiState.runningTaskUiState.currentTaskTime,
+            BottomTaskController(modifier = modifier,
+                runningTaskUiState = tappedUiState.runningTaskUiState,
                 finishTaskProcess = finishTaskProcess,
-                completeTask = completeTask,
-                onTerminateTask = onTerminateTask,
+                performTaskOnce = performTaskOnce,
                 onPauseTask = onPauseTask,
                 onContinueTask = onContinueTask,
-                onClick = { onBottomTaskControllerClick(tappedUiState.runningTaskUiState.taskId) }
-            )
+                onClick = { onBottomTaskControllerClick(tappedUiState.runningTaskUiState.taskId) })
         }
 
         Row(
@@ -146,18 +144,19 @@ fun BottomBar(
 @Composable
 private fun BottomTaskController(
     modifier: Modifier,
-    isRunning: Boolean,
-    currentTaskTime: Int,
-    finishTaskProcess: () -> Unit,
-    completeTask: (taskId: Int) -> Unit,
-    onTerminateTask: () -> Unit,
+    runningTaskUiState: RunningTaskUiState,
+    finishTaskProcess: () -> TaskProcessRecord?,
+    performTaskOnce: (
+        taskId: Int, taskProcessRecord: TaskProcessRecord?
+    ) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
     onClick: () -> Unit
 ) {
-    val taskStateText = if (isRunning) "进行中" else "暂停中"
-    val formattedTime = DateUtils.formatElapsedTime(currentTaskTime.toLong())
-    val stateColor = if (isRunning) paletteColor.darkGreen else paletteColor.darkYellow
+    val taskStateText = if (runningTaskUiState.isRunning) "进行中" else "暂停中"
+    val formattedTime = DateUtils.formatElapsedTime(runningTaskUiState.currentTaskTime.toLong())
+    val stateColor =
+        if (runningTaskUiState.isRunning) paletteColor.darkGreen else paletteColor.darkYellow
 
     Surface(
         onClick = onClick,
@@ -182,8 +181,7 @@ private fun BottomTaskController(
             )
         ) {
             Column(
-                modifier.width(230.dp),
-                verticalArrangement = Arrangement.spacedBy(3.dp)
+                modifier.width(230.dp), verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 Text(
                     "NFC · 测试任务 1",
@@ -204,7 +202,7 @@ private fun BottomTaskController(
             }
             Row() {
                 IconButton(
-                    onClick = if (isRunning) onPauseTask else onContinueTask,
+                    onClick = if (runningTaskUiState.isRunning) onPauseTask else onContinueTask,
                     colors = IconButtonColors(
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.primary,
@@ -213,15 +211,21 @@ private fun BottomTaskController(
                     )
                 ) {
                     Icon(
-                        imageVector = if (isRunning)
-                            ImageVector.vectorResource(R.drawable.baseline_pause_24) else
-                            Icons.Filled.PlayArrow,
+                        imageVector = if (runningTaskUiState.isRunning) ImageVector.vectorResource(R.drawable.baseline_pause_24) else Icons.Filled.PlayArrow,
                         contentDescription = "Localized description",
                         modifier = modifier.size(30.dp)
                     )
                 }
                 IconButton(
-                    onClick = finishTaskProcess, // TODO: 若为 NFC 任务，应为终止
+                    onClick = {
+                        if (true /* TODO: 非 NFC */) {
+                            val record = finishTaskProcess()
+                            performTaskOnce(runningTaskUiState.taskId, record)
+                        } else {
+                            // TODO: 警告并确认是否终止进行中的持续任务进程
+                            finishTaskProcess()
+                        }
+                    },
                     colors = IconButtonColors(
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.primary,
@@ -293,9 +297,8 @@ fun BottomNavigationBarPreview() {
             currentScreenRoute = "statistics",
             onItemClick = {},
             onAddTaskBtnClick = {},
-            finishTaskProcess = {},
-            completeTask = {},
-            onTerminateTask = {},
+            finishTaskProcess = { null },
+            performTaskOnce = { _, _ -> },
             onPauseTask = {},
             onContinueTask = {},
             onBottomTaskControllerClick = {},

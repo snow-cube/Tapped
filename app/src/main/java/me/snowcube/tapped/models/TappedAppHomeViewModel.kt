@@ -38,8 +38,10 @@ fun AddTaskUiState.inNfcManner(): Boolean = switchSelected == "NFC"
  */
 fun AddTaskUiState.toTask(): Task = Task(
     taskTitle = taskTitle,
+    taskDescription = taskDescription,
     taskTime = "",
     inNfcManner = inNfcManner(),
+    isRepetitive = false,
     isContinuous = inNfcManner(), // TODO: 暂时将 NFC 任务设为持续，否则非持续
     isCompleted = false
 )

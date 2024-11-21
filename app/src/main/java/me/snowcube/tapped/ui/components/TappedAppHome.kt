@@ -51,6 +51,7 @@ import kotlinx.coroutines.launch
 import me.snowcube.tapped.data.FakeTasksRepository
 import me.snowcube.tapped.models.TappedAppHomeViewModel
 import me.snowcube.tapped.models.TappedUiState
+import me.snowcube.tapped.models.TaskProcessRecord
 import me.snowcube.tapped.ui.components.task_list.PersonalTaskList
 import me.snowcube.tapped.ui.components.task_list.StatisticsPage
 import me.snowcube.tapped.ui.components.task_list.TeamTaskList
@@ -70,9 +71,10 @@ val screenItems = listOf(
 fun TappedAppHome(
     onTaskItemClick: (taskId: Int) -> Unit,
     onWriteClick: () -> Unit,
-    finishTaskProcess: () -> Unit,
-    completeTask: (taskId: Int) -> Unit,
-    onTerminateTask: () -> Unit,
+    finishTaskProcess: () -> TaskProcessRecord?,
+    performTaskOnce: (
+        taskId: Int, taskProcessRecord: TaskProcessRecord?
+    ) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
     onBottomTaskControllerClick: (taskId: Int) -> Unit,
@@ -109,75 +111,66 @@ fun TappedAppHome(
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.surfaceDim,
-            modifier = Modifier
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+        Scaffold(containerColor = MaterialTheme.colorScheme.surfaceDim,
+            modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                TappedAppTopBar(
-                    titleText = when (currentDestination?.route) {
-                        in HomeScreen.TaskList.includedRoutes -> "任务"
-                        HomeScreen.Statistics.route -> "统计"
-                        HomeScreen.Profile.route -> "账户"
-                        else -> "未知"
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            scope.launch {
-                                drawerState.apply {
-                                    if (isClosed) open() else close()
-                                }
+                TappedAppTopBar(titleText = when (currentDestination?.route) {
+                    in HomeScreen.TaskList.includedRoutes -> "任务"
+                    HomeScreen.Statistics.route -> "统计"
+                    HomeScreen.Profile.route -> "账户"
+                    else -> "未知"
+                }, navigationIcon = {
+                    IconButton(onClick = {
+                        scope.launch {
+                            drawerState.apply {
+                                if (isClosed) open() else close()
                             }
-                        }) {
-                            Icon(
-                                imageVector = Icons.Filled.Menu,
-                                contentDescription = "Localized description"
-                            )
                         }
-                    },
-                    actions = {
-                        if (currentDestination?.route in HomeScreen.TaskList.includedRoutes) {
-                            TextSwitch(
-                                selected = when (currentDestination?.route) {
-                                    TaskListEnv.Personal.name -> "个人"
-                                    TaskListEnv.Team.name -> "小组"
-                                    else -> "个人"
-                                },
-                                btnList = listOf("个人", "小组"),
-                                onSelectedChanged = {
-                                    navController.navigate(
-                                        when (it) {
-                                            "个人" -> TaskListEnv.Personal.name
-                                            "小组" -> TaskListEnv.Team.name
-                                            else -> TaskListEnv.Personal.name
-                                        }
-                                    ) {
-                                        // Pop up to the start destination of the graph to
-                                        // avoid building up a large stack of destinations
-                                        // on the back stack as users select items
-                                        popUpTo(navController.graph.findStartDestination().id) {
-                                            saveState = true
-                                        }
-                                        // Avoid multiple copies of the same destination when
-                                        // reselecting the same item
-                                        launchSingleTop = true
-                                        // Restore state when reselecting a previously selected item
-                                        restoreState = true
+                    }) {
+                        Icon(
+                            imageVector = Icons.Filled.Menu,
+                            contentDescription = "Localized description"
+                        )
+                    }
+                }, actions = {
+                    if (currentDestination?.route in HomeScreen.TaskList.includedRoutes) {
+                        TextSwitch(
+                            selected = when (currentDestination?.route) {
+                                TaskListEnv.Personal.name -> "个人"
+                                TaskListEnv.Team.name -> "小组"
+                                else -> "个人"
+                            }, btnList = listOf("个人", "小组"), onSelectedChanged = {
+                                navController.navigate(
+                                    when (it) {
+                                        "个人" -> TaskListEnv.Personal.name
+                                        "小组" -> TaskListEnv.Team.name
+                                        else -> TaskListEnv.Personal.name
                                     }
-                                },
+                                ) {
+                                    // Pop up to the start destination of the graph to
+                                    // avoid building up a large stack of destinations
+                                    // on the back stack as users select items
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    // Avoid multiple copies of the same destination when
+                                    // reselecting the same item
+                                    launchSingleTop = true
+                                    // Restore state when reselecting a previously selected item
+                                    restoreState = true
+                                }
+                            },
 //                                backgroundColor = MaterialTheme.colorScheme.surfaceBright,
-                                modifier = Modifier
-                                    .width(140.dp)
-                            )
-                        }
-                        IconButton(onClick = { /* do something */ }) {
-                            Icon(
-                                imageVector = Icons.Filled.MoreVert,
-                                contentDescription = "Localized description"
-                            )
-                        }
-                    },
-                    scrollBehavior = scrollBehavior
+                            modifier = Modifier.width(140.dp)
+                        )
+                    }
+                    IconButton(onClick = { /* do something */ }) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = "Localized description"
+                        )
+                    }
+                }, scrollBehavior = scrollBehavior
                 )
             },
             bottomBar = {
@@ -202,8 +195,7 @@ fun TappedAppHome(
                     onAddTaskBtnClick = { showBottomSheet = true },
                     tappedUiState = tappedUiState,
                     finishTaskProcess = finishTaskProcess,
-                    completeTask = completeTask,
-                    onTerminateTask = onTerminateTask,
+                    performTaskOnce = performTaskOnce,
                     onPauseTask = onPauseTask,
                     onContinueTask = onContinueTask,
                     onBottomTaskControllerClick = onBottomTaskControllerClick
@@ -215,13 +207,11 @@ fun TappedAppHome(
                 Modifier.padding(innerPadding)
             ) {
                 navigation(
-                    route = HomeScreen.TaskList.route,
-                    startDestination = TaskListEnv.Personal.name
+                    route = HomeScreen.TaskList.route, startDestination = TaskListEnv.Personal.name
                 ) {
                     composable(route = TaskListEnv.Personal.name) {
                         PersonalTaskList(
-                            taskList = taskListUiState.taskList,
-                            onTaskItemClick = onTaskItemClick
+                            taskList = taskListUiState.taskList, onTaskItemClick = onTaskItemClick
                         )
                     }
                     composable(route = TaskListEnv.Team.name) {
@@ -262,8 +252,7 @@ fun TappedAppHome(
                 addTaskUiState = homeUiState.addTaskUiState,
                 updateAddTaskUiState = viewModel::updateAddTaskUiState,
                 saveTask = viewModel::saveTask,
-                modifier = Modifier
-                    .safeDrawingPadding()
+                modifier = Modifier.safeDrawingPadding()
             )
         }
     }
@@ -277,9 +266,8 @@ fun TaskAppPreview() {
         TappedAppHome(
             onTaskItemClick = {},
             onWriteClick = {},
-            finishTaskProcess = {},
-            completeTask = {},
-            onTerminateTask = {},
+            finishTaskProcess = { null },
+            performTaskOnce = { _, _ -> },
             onPauseTask = {},
             onContinueTask = {},
             onBottomTaskControllerClick = {},

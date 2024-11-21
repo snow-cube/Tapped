@@ -33,4 +33,6 @@ interface TasksRepository {
     suspend fun updateTask(task: Task)
 
     suspend fun completeTask(taskId: Int)
+
+//    suspend fun appendTaskRecord(taskId: Int, taskRecord)
 }

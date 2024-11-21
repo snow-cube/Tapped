@@ -30,6 +30,7 @@ import kotlinx.coroutines.launch
 import me.snowcube.tapped.data.source.local.Task
 import me.snowcube.tapped.models.TappedAppViewModel
 import me.snowcube.tapped.models.NfcWritingState
+import me.snowcube.tapped.models.TaskProcessRecord
 import me.snowcube.tapped.tools.NfcManager
 import me.snowcube.tapped.ui.components.TappedApp
 import me.snowcube.tapped.ui.theme.TappedTheme
@@ -48,8 +49,8 @@ class MainActivity : ComponentActivity() {
             if (isBound) {
 //                val currentCounter = taskService?.getCurrentCounter() ?: 0
                 viewModel.updateTaskProcessState(
-                    hasTaskProcess = taskService?.hasTaskProcess ?: false,
-                    isRunning = taskService?.isRunning ?: false,
+                    hasTaskProcess = taskService?.hasTaskProcess == true,
+                    isRunning = taskService?.isRunning == true,
                     currentTaskTime = taskService?.getCurrentTaskTime() ?: 0
                 )
 
@@ -66,10 +67,11 @@ class MainActivity : ComponentActivity() {
             val binder = service as TaskService.TaskBinder
             taskService = binder.getService()  // 获取到 TaskService 的实例
             isBound = true
-            handler.post(runnable)  // 开始定期获取数据
 
             // 绑定服务后，根据服务的 taskId 从数据库获取任务基本信息（如应用重新启动后只能从服务得知任务 ID）
             taskService?.taskId?.let { viewModel.updateRunningTaskInfo(it) }
+
+            handler.post(runnable)  // 开始定期获取数据
 
             if (pendingNfcMessage != null) {
                 Log.d("TaskApp.MainActivity", "Handle NFC message when service connected")
@@ -106,8 +108,7 @@ class MainActivity : ComponentActivity() {
                 TappedApp(
                     onStartNewTask = createTaskProcess,
                     finishTaskProcess = finishTaskProcess,
-                    completeTask = viewModel::completeTask,
-                    onTerminateTask = terminateTaskProcess,
+                    performTaskOnce = viewModel::performTaskOnce,
                     onPauseTask = pauseTask,
                     onContinueTask = startOrContinueTask,
                     onWriteClick = {
@@ -302,11 +303,11 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private val terminateTaskProcess: () -> Unit = {
+    private val finishTaskProcess: () -> TaskProcessRecord? = finishTaskProcess@{
         if (taskService != null && isBound) {
-            taskService!!.terminateTaskProcess()
+            val taskProcessRecord = taskService!!.finishTaskProcess()
 
-            handler.removeCallbacks(runnable)  // 停止定期获取数据
+            handler.removeCallbacks(runnable) // 停止定期获取数据
             viewModel.updateTaskProcessState(
                 hasTaskProcess = false, isRunning = false, currentTaskTime = 0
             )
@@ -316,32 +317,11 @@ class MainActivity : ComponentActivity() {
             taskService = null
             intent = Intent(this, TaskService::class.java)
             stopService(intent)
+            return@finishTaskProcess taskProcessRecord
         } else {
             Toast.makeText(this, "Can't find service or service doesn't exist", Toast.LENGTH_LONG)
                 .show()
-        }
-    }
-
-    private val finishTaskProcess: () -> Unit = {
-        if (taskService != null && isBound) {
-            val runningTime = taskService!!.finishTaskProcess()
-
-            // TODO: 将完成任务信息保存并更新到数据库
-            viewModel.updateTaskRecord(runningTime)
-
-            handler.removeCallbacks(runnable)  // 停止定期获取数据
-            viewModel.updateTaskProcessState(
-                hasTaskProcess = false, isRunning = false, currentTaskTime = 0
-            )
-
-            unbindService(connection)
-            isBound = false
-            taskService = null
-            intent = Intent(this, TaskService::class.java)
-            stopService(intent)
-        } else {
-            Toast.makeText(this, "Can't find service or service doesn't exist", Toast.LENGTH_LONG)
-                .show()
+            return@finishTaskProcess null
         }
     }
 

@@ -11,6 +11,7 @@ import androidx.navigation.toRoute
 import kotlinx.serialization.Serializable
 import me.snowcube.tapped.data.source.local.Task
 import me.snowcube.tapped.models.TappedUiState
+import me.snowcube.tapped.models.TaskProcessRecord
 
 //enum class TappedAppScreen {
 //    Home,
@@ -32,9 +33,11 @@ object LoginRoute
 @Composable
 fun TappedApp(
     onStartNewTask: (task: Task) -> Unit,
-    finishTaskProcess: () -> Unit,
-    completeTask: (taskId: Int) -> Unit,
-    onTerminateTask: () -> Unit,
+    finishTaskProcess: () -> TaskProcessRecord?,
+    performTaskOnce: (
+        taskId: Int,
+        taskProcessRecord: TaskProcessRecord?
+    ) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
     onWriteClick: () -> Unit,
@@ -53,8 +56,7 @@ fun TappedApp(
                 },
                 onWriteClick = onWriteClick,
                 finishTaskProcess = finishTaskProcess,
-                completeTask = completeTask,
-                onTerminateTask = onTerminateTask,
+                performTaskOnce = performTaskOnce,
                 onPauseTask = onPauseTask,
                 onContinueTask = onContinueTask,
                 onBottomTaskControllerClick = { taskId ->
@@ -73,8 +75,7 @@ fun TappedApp(
                 onStartNewTask = onStartNewTask,
                 onContinueTask = onContinueTask,
                 finishTaskProcess = finishTaskProcess,
-                completeTask = completeTask,
-                onTerminateTask = onTerminateTask,
+                performTaskOnce = performTaskOnce,
                 onPauseTask = onPauseTask,
             )
         }

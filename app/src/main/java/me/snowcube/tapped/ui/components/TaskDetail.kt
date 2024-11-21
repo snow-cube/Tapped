@@ -40,6 +40,7 @@ import me.snowcube.tapped.data.source.local.Task
 import me.snowcube.tapped.models.RunningTaskUiState
 import me.snowcube.tapped.models.TappedUiState
 import me.snowcube.tapped.models.TaskDetailViewModel
+import me.snowcube.tapped.models.TaskProcessRecord
 import me.snowcube.tapped.models.TaskState
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
@@ -47,9 +48,11 @@ import me.snowcube.tapped.ui.theme.paletteColor
 @Composable
 fun TaskDetail(
     onStartNewTask: (task: Task) -> Unit,
-    finishTaskProcess: () -> Unit, // 将持续任务的运行进程成功结束，将运行记录更新，并不标记任务为“已完成”
-    completeTask: (taskId: Int) -> Unit, // 将任务标记为“已完成”
-    onTerminateTask: () -> Unit,
+    finishTaskProcess: () -> TaskProcessRecord?, // 将持续任务的运行进程成功结束，返回运行记录
+    performTaskOnce: (
+        taskId: Int,
+        taskProcessRecord: TaskProcessRecord?
+    ) -> Unit, // 将任务打卡一次
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
     tappedUiState: TappedUiState,
@@ -77,8 +80,7 @@ fun TaskDetail(
         if (isRelatedTaskHasProcess) DateUtils.formatElapsedTime(tappedUiState.runningTaskUiState.currentTaskTime.toLong())
         else DateUtils.formatElapsedTime(0)
 
-    val formattedAccumulatedTime =
-        DateUtils.formatElapsedTime(0)
+    val formattedAccumulatedTime = DateUtils.formatElapsedTime(0)
 
     val stateColor =
         if (isRelatedTaskHasProcess) if (tappedUiState.runningTaskUiState.isRunning) paletteColor.backgroundGreen else paletteColor.backgroundYellow
@@ -183,10 +185,13 @@ fun TaskDetail(
                             enabled = isRelatedTaskHasProcess,
                             onClick = {
                                 if (true /* TODO: 非 NFC */) {
-                                    finishTaskProcess()
+                                    uiState.task?.let { task ->
+                                        val record = finishTaskProcess()
+                                        performTaskOnce(task.id, record)
+                                    }
                                 } else {
                                     // TODO: 警告并确认是否终止进行中的持续任务进程
-                                    onTerminateTask()
+                                    finishTaskProcess()
                                 }
                             },
                             colors = IconButtonDefaults.iconButtonColors(
@@ -208,7 +213,7 @@ fun TaskDetail(
                         IconButton(
                             enabled = true, // TODO: 任务非 NFC
                             onClick = {
-                                uiState.task?.let { completeTask(it.id) }
+                                uiState.task?.let { task -> performTaskOnce(task.id, null) }
                             },
                             colors = IconButtonDefaults.iconButtonColors(
                                 contentColor = Color.White,
@@ -237,8 +242,7 @@ private fun TaskDetailRunningPreview() {
     TappedTheme() {
         TaskDetail(
             onStartNewTask = {},
-            finishTaskProcess = { },
-            onTerminateTask = {},
+            finishTaskProcess = { null },
             onPauseTask = {},
             onContinueTask = {},
             tappedUiState = TappedUiState(
@@ -247,7 +251,7 @@ private fun TaskDetailRunningPreview() {
                     isRunning = true, taskCnt = 1, accumulatedTime = 110
                 ),
             ),
-            completeTask = {},
+            performTaskOnce = { _, _ -> },
         )
     }
 }
@@ -258,8 +262,7 @@ private fun TaskDetailPausedPreview() {
     TappedTheme() {
         TaskDetail(
             onStartNewTask = {},
-            finishTaskProcess = {},
-            onTerminateTask = {},
+            finishTaskProcess = { null },
             onPauseTask = {},
             onContinueTask = {},
             tappedUiState = TappedUiState(
@@ -268,7 +271,7 @@ private fun TaskDetailPausedPreview() {
                     isRunning = false, taskCnt = 2, accumulatedTime = 130
                 ),
             ),
-            completeTask = {},
+            performTaskOnce = { _, _ -> },
         )
     }
 }
@@ -279,8 +282,7 @@ private fun TaskDetailNotActivePreview() {
     TappedTheme() {
         TaskDetail(
             onStartNewTask = {},
-            finishTaskProcess = {},
-            onTerminateTask = {},
+            finishTaskProcess = { null },
             onPauseTask = {},
             onContinueTask = {},
             tappedUiState = TappedUiState(
@@ -289,7 +291,7 @@ private fun TaskDetailNotActivePreview() {
                     isRunning = false, taskCnt = 2, accumulatedTime = 130
                 ),
             ),
-            completeTask = {},
+            performTaskOnce = { _, _ -> },
         )
     }
 }

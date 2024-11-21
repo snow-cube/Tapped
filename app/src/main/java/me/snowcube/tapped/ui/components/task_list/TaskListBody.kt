@@ -279,17 +279,21 @@ fun TaskListBodyPreview() {
                     Task(
                         1,
                         "Task name",
+                        "Task description...",
                         "",
                         inNfcManner = true,
                         isContinuous = true,
                         isCompleted = false,
+                        isRepetitive = true,
                     ), Task(
                         2,
                         "Task name 2",
+                        "Task description...",
                         "",
                         inNfcManner = false,
                         isContinuous = true,
-                        isCompleted = true
+                        isCompleted = true,
+                        isRepetitive = false,
                     )
                 )
             )

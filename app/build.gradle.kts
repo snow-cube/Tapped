@@ -11,12 +11,12 @@ plugins {
 
 android {
     namespace = "me.snowcube.tapped"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "me.snowcube.tapped"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
