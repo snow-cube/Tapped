@@ -40,8 +40,8 @@ fun TextSwitch(
         shape = RoundedCornerShape(12.dp),
         modifier = modifier
             .background(color = backgroundColor, shape = RoundedCornerShape(14.dp))
+            .height(36.dp)
             .padding(2.dp)
-            .height(32.dp)
     ) {
         Row {
             btnList.forEach() { btnName ->

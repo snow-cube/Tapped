@@ -174,6 +174,7 @@ class MainActivity : ComponentActivity() {
             // Other type of intent
         }
 
+        // TODO: 似乎写入任务时也会读取并触发消息处理？验证是否会直接开启任务
         if (pendingNfcMessage != null) {
             // 未绑定服务且有服务在运行：应等待 onStart() 中绑定服务并在连接时处理 Intent message
             if (isBound || !isServiceRunning(TaskService::class.java)) {
@@ -244,7 +245,13 @@ class MainActivity : ComponentActivity() {
                 nfcMsg = pendingNfcMessage!!
                 pendingNfcMessage = null
 
-                val taskId = nfcMsg.toInt()
+                val taskId = try {
+                    nfcMsg.toInt()
+                } catch (e: NumberFormatException) {
+                    Toast.makeText(this@MainActivity, "Unknown format", Toast.LENGTH_LONG).show()
+                    return@launch
+                }
+
                 val task = viewModel.getTask(taskId)
 
                 if (task != null) { // 格式正确，成功找到任务
@@ -257,6 +264,8 @@ class MainActivity : ComponentActivity() {
                     } else {
                         createTaskProcess(task)
                     }
+                } else {
+                    Toast.makeText(this@MainActivity, "Task not found", Toast.LENGTH_LONG).show()
                 }
             }
         }

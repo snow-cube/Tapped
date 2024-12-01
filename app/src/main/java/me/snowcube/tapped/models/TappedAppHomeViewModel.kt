@@ -23,12 +23,14 @@ data class TappedAppHomeUiState(
 )
 
 data class AddTaskUiState(
-    val selectedTime: Pair<Int, Int>? = null,
+    val selectedStartTime: Pair<Int, Int>? = null,
+    val selectedEndTime: Pair<Int, Int>? = null,
     val beginDateSelected: Long? = null,
     val endDateSelected: Long? = null,
     val taskTitle: String = "",
     val taskDescription: String = "",
-    val switchSelected: String = "NFC"
+    val switchSelected: String = "NFC",
+    val isContinuous: Boolean = false,
 )
 
 fun AddTaskUiState.inNfcManner(): Boolean = switchSelected == "NFC"
@@ -42,7 +44,7 @@ fun AddTaskUiState.toTask(): Task = Task(
     taskTime = "",
     inNfcManner = inNfcManner(),
     isRepetitive = false,
-    isContinuous = inNfcManner(), // TODO: 暂时将 NFC 任务设为持续，否则非持续
+    isContinuous = isContinuous, // TODO: 暂时将 NFC 任务设为持续，否则非持续
     isCompleted = false
 )
 
