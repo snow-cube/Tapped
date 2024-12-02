@@ -50,7 +50,7 @@ fun TaskDetail(
     onStartNewTask: (task: Task) -> Unit,
     finishTaskProcess: () -> TaskProcessRecord?, // 将持续任务的运行进程成功结束，返回运行记录
     performTaskOnce: (
-        taskId: Int,
+        taskId: Long,
         taskProcessRecord: TaskProcessRecord?
     ) -> Unit, // 将任务打卡一次
     onPauseTask: () -> Unit,
@@ -71,7 +71,7 @@ fun TaskDetail(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val isRelatedTaskHasProcess =
-        tappedUiState.hasTaskProcess && tappedUiState.runningTaskUiState.taskId == uiState.task?.id
+        tappedUiState.hasTaskProcess && tappedUiState.runningTaskUiState.task?.id == uiState.task?.id
 
     val taskStateText =
         if (isRelatedTaskHasProcess) if (tappedUiState.runningTaskUiState.isRunning) "进行中" else "暂停中"

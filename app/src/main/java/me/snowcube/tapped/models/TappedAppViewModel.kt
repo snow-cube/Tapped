@@ -27,7 +27,11 @@ data class TappedUiState(
 )
 
 data class RunningTaskUiState(
-    val taskId: Int = 0,
+    val task: Task? = null, // 改为直接存储任务，后续可能修改
+//    val taskId: Long = 0,
+//    val taskTitle: String = "",
+//    val inNfcManner: Boolean = false,
+
     val isRunning: Boolean = false,
     val currentTaskTime: Int = 0,
 
@@ -35,13 +39,13 @@ data class RunningTaskUiState(
     val accumulatedTime: Int = 0,
 )
 
-fun Task.toRunningTaskUiState(): RunningTaskUiState {
-    return RunningTaskUiState(
-        taskId = this.id,
-//        taskCnt =
-//        accumulatedTime =
-    )
-}
+//fun Task.toRunningTaskUiState(): RunningTaskUiState {
+//    return RunningTaskUiState(
+//        taskId = this.id,
+////        taskCnt =
+////        accumulatedTime =
+//    )
+//}
 
 // TODO: 应能够详细记录进程的暂停时间等信息
 // 任务时长通过开始结束暂停信息计算
@@ -101,17 +105,18 @@ class TappedAppViewModel @Inject constructor(
         }
     }
 
-    suspend fun getTask(taskId: Int): Task? =
+    suspend fun getTask(taskId: Long): Task? =
         tasksRepository.getTaskStream(taskId).filterNotNull().firstOrNull()
 
 
-    fun updateRunningTaskInfo(taskId: Int) {
+    fun updateRunningTaskInfo(taskId: Long) {
         viewModelScope.launch {
             getTask(taskId)?.let {
                 _uiState.update { currentState ->
                     currentState.copy(
                         runningTaskUiState = currentState.runningTaskUiState.copy(
-                            taskId = it.id
+//                            taskId = it.id,
+                            task = it
                         )
                     )
                 }
@@ -120,7 +125,7 @@ class TappedAppViewModel @Inject constructor(
     }
 
     // TODO: Temporary logic 应在数据层实现任务记录，更新任务记录并在更新记录方法中检查完成状态 *所有记录更新操作中都应包含对完成状态的检查而非由调用者检查*
-    fun performTaskOnce(taskId: Int, taskProcessRecord: TaskProcessRecord? = null) {
+    fun performTaskOnce(taskId: Long, taskProcessRecord: TaskProcessRecord? = null) {
         viewModelScope.launch {
             getTask(taskId)?.let { task ->
                 if (!task.isRepetitive) {
@@ -130,7 +135,7 @@ class TappedAppViewModel @Inject constructor(
         }
     }
 
-    fun completeTask(taskId: Int) {
+    fun completeTask(taskId: Long) {
         viewModelScope.launch {
             tasksRepository.completeTask(taskId)
         }

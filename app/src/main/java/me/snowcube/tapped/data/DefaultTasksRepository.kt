@@ -18,15 +18,15 @@ class DefaultTasksRepository @Inject constructor(
 ) : TasksRepository {
     override fun getAllTasksStream(): Flow<List<Task>> = localDataSource.getAllTasks()
 
-    override fun getTaskStream(id: Int): Flow<Task?> = localDataSource.getTask(id)
+    override fun getTaskStream(id: Long): Flow<Task?> = localDataSource.getTask(id)
 
-    override suspend fun insertTask(task: Task) = localDataSource.insert(task)
+    override suspend fun insertTask(task: Task): Long = localDataSource.insert(task)
 
     override suspend fun deleteTask(task: Task) = localDataSource.delete(task)
 
     override suspend fun updateTask(task: Task) = localDataSource.update(task)
 
-    override suspend fun completeTask(taskId: Int) = localDataSource.updateCompleted(taskId, true)
+    override suspend fun completeTask(taskId: Long) = localDataSource.updateCompleted(taskId, true)
 }
 
 @Singleton
@@ -35,13 +35,13 @@ class FakeTasksRepository @Inject constructor(
 
     override fun getAllTasksStream(): Flow<List<Task>> = flowOf(listOf())
 
-    override fun getTaskStream(id: Int): Flow<Task?> = flowOf()
+    override fun getTaskStream(id: Long): Flow<Task?> = flowOf()
 
-    override suspend fun insertTask(task: Task) {}
+    override suspend fun insertTask(task: Task): Long = -1
 
     override suspend fun deleteTask(task: Task) {}
 
     override suspend fun updateTask(task: Task) {}
 
-    override suspend fun completeTask(taskId: Int) {}
+    override suspend fun completeTask(taskId: Long) {}
 }

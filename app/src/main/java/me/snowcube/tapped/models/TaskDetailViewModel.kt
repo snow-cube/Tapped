@@ -48,7 +48,7 @@ import javax.inject.Inject
 //    val taskUiState: StateFlow<TaskState> = _taskUiState
 //
 //    // 初始化函数，传入 id 从数据库获取数据并监听更新
-//    fun loadTask(taskId: Int) {
+//    fun loadTask(taskId: Long) {
 //        _uiState.value = _uiState.value.copy(isLoading = true) // 设置加载状态
 //
 //        viewModelScope.launch {
@@ -105,7 +105,7 @@ class TaskDetailViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val route: TaskDetailRoute = savedStateHandle.toRoute()
-    private val taskId: Int = route.taskId
+    private val taskId: Long = route.taskId
 
     companion object {
         private const val TIMEOUT_MILLIS = 5_000L

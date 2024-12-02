@@ -69,15 +69,15 @@ val screenItems = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TappedAppHome(
-    onTaskItemClick: (taskId: Int) -> Unit,
-    onWriteClick: () -> Unit,
+    onTaskItemClick: (taskId: Long) -> Unit,
+    writeTaskToNfc: (taskId: Long) -> Boolean,
     finishTaskProcess: () -> TaskProcessRecord?,
     performTaskOnce: (
-        taskId: Int, taskProcessRecord: TaskProcessRecord?
+        taskId: Long, taskProcessRecord: TaskProcessRecord?
     ) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
-    onBottomTaskControllerClick: (taskId: Int) -> Unit,
+    onBottomTaskControllerClick: (taskId: Long) -> Unit,
     tappedUiState: TappedUiState,
     onCloseWritingClick: () -> Unit,
     viewModel: TappedAppHomeViewModel = hiltViewModel()
@@ -247,7 +247,7 @@ fun TappedAppHome(
 
                     showBottomSheet = false
                 },
-                onWriteClick = onWriteClick,
+                writeTaskToNfc = writeTaskToNfc,
                 onCloseWritingClick = onCloseWritingClick,
                 addTaskUiState = homeUiState.addTaskUiState,
                 updateAddTaskUiState = viewModel::updateAddTaskUiState,
@@ -265,7 +265,7 @@ fun TaskAppPreview() {
     TappedTheme {
         TappedAppHome(
             onTaskItemClick = {},
-            onWriteClick = {},
+            writeTaskToNfc = { false },
             finishTaskProcess = { null },
             performTaskOnce = { _, _ -> },
             onPauseTask = {},

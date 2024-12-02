@@ -15,7 +15,7 @@ import androidx.core.app.ServiceCompat
 import me.snowcube.tapped.models.TaskProcessRecord
 
 class TaskService : Service() {
-    var taskId: Int? = null
+    var taskId: Long? = null
         private set
     var taskTitle: String? = null
         private set
@@ -129,8 +129,8 @@ class TaskService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        taskId = intent?.getIntExtra("EXTRA_DATA_INT", 0)
-        taskTitle = intent?.getStringExtra("EXTRA_DATA_STRING") ?: "Unknown task"
+        taskId = intent?.getLongExtra("TASK_ID_LONG", 0)
+        taskTitle = intent?.getStringExtra("TASK_TITLE_STRING") ?: "Unknown task"
 
         startForeground()
         hasTaskProcess = true

@@ -3,9 +3,10 @@ package me.snowcube.tapped.ui.components.widgets
 import android.os.Build
 import android.widget.Toast
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -13,11 +14,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.requiredHeight
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Done
@@ -26,36 +26,34 @@ import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.launch
 import me.snowcube.tapped.R
 import me.snowcube.tapped.models.AddTaskUiState
@@ -63,15 +61,14 @@ import me.snowcube.tapped.models.NfcWritingState
 import me.snowcube.tapped.models.inNfcManner
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
-import java.lang.Thread.sleep
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun AddTaskComponent(
     modifier: Modifier = Modifier,
-    saveTask: suspend () -> Unit,
+    saveTask: suspend () -> Long,
     quitComponent: () -> Unit,
-    onWriteClick: () -> Unit,
+    writeTaskToNfc: (taskId: Long) -> Boolean,
     onCloseWritingClick: () -> Unit,
     nfcWritingState: NfcWritingState,
     addTaskUiState: AddTaskUiState,
@@ -80,6 +77,8 @@ fun AddTaskComponent(
 
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
+
+    var showRepetitionConfig by remember { mutableStateOf(false) }
 
     Column(
         verticalArrangement = Arrangement.SpaceBetween, modifier = modifier
@@ -104,31 +103,60 @@ fun AddTaskComponent(
                         contentDescription = "Close task adding page"
                     )
                 }
-                Text(
-                    "添加任务",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
-                )
+//                Text(
+//                    "添加任务",
+//                    style = MaterialTheme.typography.titleMedium,
+//                    fontWeight = FontWeight.Bold
+//                )
                 TextSwitch(
                     selected = addTaskUiState.switchSelected,
                     btnList = listOf("NFC", "普通"),
                     onSelectedChanged = { updateAddTaskUiState(addTaskUiState.copy(switchSelected = it)) },
+                    roundedCorner = true,
                     modifier = modifier
-                        .width(110.dp)
-                        .height(32.dp)
+                        .width(120.dp)
+                        .height(36.dp)
                 )
-                IconButton(onClick = {
-                    coroutineScope.launch {
-                        saveTask()
+
+                Row(
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = modifier.width(140.dp)
+//                        .background(color = Color.Gray)
+                ) {
+                    Button(
+                        onClick = {
+                            coroutineScope.launch {
+                                val taskId = saveTask()
+                                if (taskId == -1L) {
+                                    Toast.makeText(context, "保存失败", Toast.LENGTH_LONG).show()
+                                    return@launch
+                                }
 //                            sleep(5000)
-                        Toast.makeText(context, "保存成功", Toast.LENGTH_LONG).show()
-                        quitComponent()
+//                                Toast.makeText(context, "保存成功", Toast.LENGTH_LONG).show()
+                                if (!writeTaskToNfc(taskId)) {
+                                    Toast.makeText(context, "写入错误", Toast.LENGTH_LONG).show()
+
+                                    // TODO: 处理写入识别的情况 如删除已插入的任务
+
+                                    return@launch
+                                }
+//                                quitComponent()
+                            }
+                        },
+                        contentPadding = PaddingValues(vertical = 0.dp, horizontal = 15.dp),
+                        modifier = modifier.height(36.dp)
+                    ) {
+                        Text(
+                            if (addTaskUiState.inNfcManner()) "保存并写入" else "保存",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Icon(
+                            imageVector = Icons.Default.Done,
+                            contentDescription = "Finish task adding page"
+                        )
                     }
-                }) {
-                    Icon(
-                        imageVector = Icons.Default.Done,
-                        contentDescription = "Finish task adding page"
-                    )
                 }
             }
 
@@ -173,19 +201,14 @@ fun AddTaskComponent(
                 modifier = modifier.fillMaxWidth()
             )
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("持续任务")
-                Switch(
-                    checked = addTaskUiState.isContinuous,
-                    onCheckedChange = {
-                        updateAddTaskUiState(addTaskUiState.copy(isContinuous = it))
-                    },
-                )
-            }
+            SettingItemSwitch(
+                label = "持续任务",
+                checked = addTaskUiState.isContinuous,
+                onCheckedChange = {
+                    updateAddTaskUiState(addTaskUiState.copy(isContinuous = it))
+                },
+                modifier
+            )
 
             // TODO: 支持选择“早于”、“迟于”、“宽限时长”
             Row(
@@ -225,22 +248,168 @@ fun AddTaskComponent(
                 },
                 onDismiss = { },
             )
-        }
 
-        OperationButton(
-            text = "写入",
-            enabled = addTaskUiState.inNfcManner(),
-            modifier = modifier.fillMaxWidth()
+            Column(
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                SettingItemMore(
+                    label = "重复设置",
+                    info = "<重复规则简介>",
+                    onClick = { showRepetitionConfig = !showRepetitionConfig },
+                    modifier = modifier.height(44.dp)
+                )
+                SettingItemMore(label = "更多设置", onClick = {}, modifier = modifier.height(44.dp))
+            }
+        }
+//        OperationButton(
+//            text = "写入",
+//            enabled = addTaskUiState.inNfcManner(),
+//            modifier = modifier.fillMaxWidth()
+//        ) {
+//            onWriteClick()
+//        }
+    }
+
+    if (showRepetitionConfig) {
+        ConfigDialog(
+            title = "重复设置",
+            showConfirm = false,
+            onDismiss = {showRepetitionConfig = false},
+            modifier = modifier.width(350.dp)
         ) {
-            onWriteClick()
+            SettingItemSwitch(
+                label = "重复",
+                checked = addTaskUiState.isRepetitive,
+                onCheckedChange = {
+                    updateAddTaskUiState(addTaskUiState.copy(isRepetitive = it))
+                },
+            )
         }
     }
 
     if (nfcWritingState != NfcWritingState.Closed) {
         WritingDialog(
             writingState = nfcWritingState,
-            onDismissRequest = onCloseWritingClick,
+            onDismissRequest = {
+                val writingResult = nfcWritingState
+                onCloseWritingClick()
+                if (writingResult == NfcWritingState.Succeeded) {
+                    quitComponent()
+                } else if (writingResult == NfcWritingState.Failed) {
+                    // TODO: 处理写入识别的情况 如删除已插入的任务
+                }
+            },
         )
+    }
+}
+
+@Composable
+private fun SettingItemSwitch(
+    label: String,
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 0.dp, horizontal = 8.dp)
+    ) {
+        Text(label, style = MaterialTheme.typography.titleMedium)
+        Switch(
+            checked = checked, onCheckedChange = onCheckedChange, modifier = modifier.height(40.dp)
+        )
+    }
+}
+
+@Composable
+private fun SettingItemMore(
+    label: String, onClick: () -> Unit, info: String = "", modifier: Modifier = Modifier
+) {
+    Button(
+        onClick = onClick,
+        contentPadding = PaddingValues(vertical = 0.dp, horizontal = 8.dp),
+//        contentPadding = PaddingValues(start = 5.dp, top = 0.dp, bottom = 0.dp, end = 0.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = Color.Transparent,
+            contentColor = MaterialTheme.colorScheme.onSurface,
+            disabledContainerColor = Color.Transparent,
+            disabledContentColor = paletteColor.invalidGrey
+        ),
+        shape = MaterialTheme.shapes.small,
+        modifier = modifier
+            .height(40.dp)
+            .fillMaxWidth()
+    ) {
+        Text(
+            label, style = MaterialTheme.typography.titleMedium
+        )
+        Spacer(modifier = Modifier.weight(1f))
+        Text(
+            info,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Spacer(modifier.width(10.dp))
+        Icon(
+            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight, contentDescription = label
+        )
+    }
+}
+
+@Composable
+fun ConfigDialog(
+    title: String,
+    showConfirm: Boolean = true,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit = {},
+    toggle: @Composable () -> Unit = {},
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onDismiss,
+        properties = DialogProperties(usePlatformDefaultWidth = false),
+    ) {
+        Surface(
+            shape = MaterialTheme.shapes.large,
+            tonalElevation = 6.dp,
+            modifier = modifier
+                .width(IntrinsicSize.Min)
+                .height(IntrinsicSize.Min)
+                .background(
+                    shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface
+                ),
+        ) {
+            Column(
+                modifier = modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Text(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 20.dp),
+                    text = title,
+                    style = MaterialTheme.typography.labelLarge
+                )
+
+                content()
+
+                Row(
+                    modifier = modifier
+                        .height(40.dp)
+                        .fillMaxWidth()
+                ) {
+                    toggle()
+                    Spacer(modifier = modifier.weight(1f))
+                    TextButton(onClick = onDismiss) { Text(if (showConfirm) "Cancel" else "收起") }
+                    if (showConfirm) TextButton(onClick = onConfirm) { Text("OK") }
+                }
+            }
+        }
     }
 }
 
@@ -282,7 +451,7 @@ fun WritingDialog(
                     )
                 }
                 Button(
-                    onClick = { onDismissRequest() }, colors = ButtonDefaults.textButtonColors(
+                    onClick = onDismissRequest, colors = ButtonDefaults.textButtonColors(
                         containerColor = MaterialTheme.colorScheme.onPrimaryContainer,
                         contentColor = MaterialTheme.colorScheme.primaryContainer
                     ), shape = RectangleShape, modifier = Modifier
@@ -330,11 +499,11 @@ fun AddTaskComponentPreview() {
         Surface(
             color = Color.White, modifier = Modifier
                 .fillMaxWidth()
-                .height(500.dp)
+                .height(600.dp)
         ) {
-            AddTaskComponent(saveTask = {},
+            AddTaskComponent(saveTask = { -1 },
                 quitComponent = {},
-                onWriteClick = {},
+                writeTaskToNfc = { false },
                 onCloseWritingClick = {},
                 nfcWritingState = NfcWritingState.Closed,
                 addTaskUiState = AddTaskUiState(),
@@ -351,11 +520,11 @@ fun AddTaskComponentWritingPreview() {
         Surface(
             color = Color.White, modifier = Modifier
                 .fillMaxWidth()
-                .height(500.dp)
+                .height(600.dp)
         ) {
-            AddTaskComponent(saveTask = {},
+            AddTaskComponent(saveTask = { -1 },
                 quitComponent = {},
-                onWriteClick = {},
+                writeTaskToNfc = { false },
                 onCloseWritingClick = {},
                 nfcWritingState = NfcWritingState.Writing,
                 addTaskUiState = AddTaskUiState(),
@@ -372,11 +541,11 @@ fun AddTaskComponentFailedPreview() {
         Surface(
             color = Color.White, modifier = Modifier
                 .fillMaxWidth()
-                .height(500.dp)
+                .height(600.dp)
         ) {
-            AddTaskComponent(saveTask = {},
+            AddTaskComponent(saveTask = { -1 },
                 quitComponent = {},
-                onWriteClick = {},
+                writeTaskToNfc = { false },
                 onCloseWritingClick = {},
                 nfcWritingState = NfcWritingState.Failed,
                 addTaskUiState = AddTaskUiState(),

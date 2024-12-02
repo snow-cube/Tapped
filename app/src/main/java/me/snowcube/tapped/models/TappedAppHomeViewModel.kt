@@ -31,6 +31,7 @@ data class AddTaskUiState(
     val taskDescription: String = "",
     val switchSelected: String = "NFC",
     val isContinuous: Boolean = false,
+    val isRepetitive: Boolean = false,
 )
 
 fun AddTaskUiState.inNfcManner(): Boolean = switchSelected == "NFC"
@@ -43,7 +44,7 @@ fun AddTaskUiState.toTask(): Task = Task(
     taskDescription = taskDescription,
     taskTime = "",
     inNfcManner = inNfcManner(),
-    isRepetitive = false,
+    isRepetitive = isRepetitive,
     isContinuous = isContinuous, // TODO: 暂时将 NFC 任务设为持续，否则非持续
     isCompleted = false
 )
@@ -68,8 +69,8 @@ open class TappedAppHomeViewModel @Inject constructor(
             initialValue = TaskListUiState()
         )
 
-    suspend fun saveTask() {
-        tasksRepository.insertTask(uiState.value.addTaskUiState.toTask())
+    suspend fun saveTask(): Long {
+        return tasksRepository.insertTask(uiState.value.addTaskUiState.toTask())
     }
 
     fun updateAddTaskUiState(addTaskUiState: AddTaskUiState) {

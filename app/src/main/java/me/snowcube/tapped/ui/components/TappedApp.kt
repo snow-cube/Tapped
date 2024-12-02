@@ -23,7 +23,7 @@ import me.snowcube.tapped.models.TaskProcessRecord
 object HomeRoute
 
 @Serializable
-data class TaskDetailRoute(val taskId: Int)
+data class TaskDetailRoute(val taskId: Long)
 
 @Serializable
 object LoginRoute
@@ -35,12 +35,12 @@ fun TappedApp(
     onStartNewTask: (task: Task) -> Unit,
     finishTaskProcess: () -> TaskProcessRecord?,
     performTaskOnce: (
-        taskId: Int,
+        taskId: Long,
         taskProcessRecord: TaskProcessRecord?
     ) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
-    onWriteClick: () -> Unit,
+    writeTaskToNfc: (taskId: Long) -> Boolean,
     tappedUiState: TappedUiState,
     onCloseWritingClick: () -> Unit,
 ) {
@@ -54,7 +54,7 @@ fun TappedApp(
                 onTaskItemClick = { taskId ->
                     taskAppNavController.navigate(TaskDetailRoute(taskId))
                 },
-                onWriteClick = onWriteClick,
+                writeTaskToNfc = writeTaskToNfc,
                 finishTaskProcess = finishTaskProcess,
                 performTaskOnce = performTaskOnce,
                 onPauseTask = onPauseTask,

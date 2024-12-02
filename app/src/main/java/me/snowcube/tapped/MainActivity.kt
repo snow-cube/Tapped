@@ -73,7 +73,7 @@ class MainActivity : ComponentActivity() {
 
             handler.post(runnable)  // 开始定期获取数据
 
-            if (pendingNfcMessage != null) {
+            if (nfcManager?.hasPendingMsgToWrite() == false && pendingNfcMessage != null) {
                 Log.d("TaskApp.MainActivity", "Handle NFC message when service connected")
                 handleNfcMessage()
             }
@@ -111,15 +111,15 @@ class MainActivity : ComponentActivity() {
                     performTaskOnce = viewModel::performTaskOnce,
                     onPauseTask = pauseTask,
                     onContinueTask = startOrContinueTask,
-                    onWriteClick = {
-                        // TODO: 应该先保存生成 ID 后再写入
+                    writeTaskToNfc = writeTaskToNfc@{ taskId ->
                         // TODO: UI 部分也应对 NFC 是否可用做出检查
                         if (nfcManager != null && nfcManager!!.nfcAvailable) {
-                            nfcManager?.setPendingMsgToWrite("testtaskid")
+                            nfcManager?.setPendingMsgToWrite(taskId.toString())
                             viewModel.setWritingState(NfcWritingState.Writing)
+                            return@writeTaskToNfc true
                         } else {
-                            Toast.makeText(this, "NFC is not available", Toast.LENGTH_LONG)
-                                .show()
+                            Toast.makeText(this, "NFC is not available", Toast.LENGTH_LONG).show()
+                            return@writeTaskToNfc false
                         }
                     },
                     tappedUiState = uiState,
@@ -174,8 +174,7 @@ class MainActivity : ComponentActivity() {
             // Other type of intent
         }
 
-        // TODO: 似乎写入任务时也会读取并触发消息处理？验证是否会直接开启任务
-        if (pendingNfcMessage != null) {
+        if (nfcManager?.hasPendingMsgToWrite() == false && pendingNfcMessage != null) {
             // 未绑定服务且有服务在运行：应等待 onStart() 中绑定服务并在连接时处理 Intent message
             if (isBound || !isServiceRunning(TaskService::class.java)) {
                 Log.d("TaskApp.MainActivity", "Intent handled by onNewIntent")
@@ -200,7 +199,7 @@ class MainActivity : ComponentActivity() {
                 bindService(intent, connection, BIND_ABOVE_CLIENT)
             }
         } else {
-            if (pendingNfcMessage != null) {
+            if (nfcManager?.hasPendingMsgToWrite() == false && pendingNfcMessage != null) {
                 Log.d("TaskApp.MainActivity", "Intent handled by onStart")
                 handleNfcMessage()
             }
@@ -246,7 +245,7 @@ class MainActivity : ComponentActivity() {
                 pendingNfcMessage = null
 
                 val taskId = try {
-                    nfcMsg.toInt()
+                    nfcMsg.toLong()
                 } catch (e: NumberFormatException) {
                     Toast.makeText(this@MainActivity, "Unknown format", Toast.LENGTH_LONG).show()
                     return@launch
@@ -255,14 +254,25 @@ class MainActivity : ComponentActivity() {
                 val task = viewModel.getTask(taskId)
 
                 if (task != null) { // 格式正确，成功找到任务
-                    if (isBound || taskService?.hasTaskProcess == true) {
-                        if (taskService?.taskId == task.id) { // ID 和当前进行中任务一致
-                            finishTaskProcess()
-                        } else {
-                            // TODO: 警告并询问是否终止或完成当前任务
-                        }
+                    if (task.isCompleted) {
+                        Toast.makeText(
+                            this@MainActivity, "任务已完成，不可再次执行", Toast.LENGTH_LONG
+                        ).show()
                     } else {
-                        createTaskProcess(task)
+                        if (task.isContinuous) {
+                            if (isBound || taskService?.hasTaskProcess == true) {
+                                if (taskService?.taskId == task.id) { // ID 和当前进行中任务一致
+                                    val record = finishTaskProcess()
+                                    viewModel.performTaskOnce(task.id, record)
+                                } else {
+                                    // TODO: 警告并询问是否终止或完成当前任务
+                                }
+                            } else {
+                                createTaskProcess(task)
+                            }
+                        } else {
+                            viewModel.performTaskOnce(task.id)
+                        }
                     }
                 } else {
                     Toast.makeText(this@MainActivity, "Task not found", Toast.LENGTH_LONG).show()
@@ -283,8 +293,8 @@ class MainActivity : ComponentActivity() {
 
             // 新建 Service 并绑定
             intent = Intent(this, TaskService::class.java).apply {
-                putExtra("EXTRA_DATA_INT", it.id)
-                putExtra("EXTRA_DATA_STRING", it.taskTitle)
+                putExtra("TASK_ID_LONG", it.id)
+                putExtra("TASK_TITLE_STRING", it.taskTitle)
             }
             startForegroundService(intent)
             bindService(intent, connection, BIND_ABOVE_CLIENT)

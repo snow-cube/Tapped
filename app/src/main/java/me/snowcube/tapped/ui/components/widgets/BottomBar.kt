@@ -62,11 +62,11 @@ fun BottomBar(
     tappedUiState: TappedUiState,
     finishTaskProcess: () -> TaskProcessRecord?,
     performTaskOnce: (
-        taskId: Int, taskProcessRecord: TaskProcessRecord?
+        taskId: Long, taskProcessRecord: TaskProcessRecord?
     ) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
-    onBottomTaskControllerClick: (taskId: Int) -> Unit,
+    onBottomTaskControllerClick: (taskId: Long) -> Unit,
 
     ) {
     Column(
@@ -84,7 +84,13 @@ fun BottomBar(
                 performTaskOnce = performTaskOnce,
                 onPauseTask = onPauseTask,
                 onContinueTask = onContinueTask,
-                onClick = { onBottomTaskControllerClick(tappedUiState.runningTaskUiState.taskId) })
+                onClick = {
+                    tappedUiState.runningTaskUiState.task?.let {
+                        onBottomTaskControllerClick(
+                            it.id
+                        )
+                    }
+                })
         }
 
         Row(
@@ -147,7 +153,7 @@ private fun BottomTaskController(
     runningTaskUiState: RunningTaskUiState,
     finishTaskProcess: () -> TaskProcessRecord?,
     performTaskOnce: (
-        taskId: Int, taskProcessRecord: TaskProcessRecord?
+        taskId: Long, taskProcessRecord: TaskProcessRecord?
     ) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
@@ -184,7 +190,7 @@ private fun BottomTaskController(
                 modifier.width(230.dp), verticalArrangement = Arrangement.spacedBy(3.dp)
             ) {
                 Text(
-                    "NFC · 测试任务 1",
+                    "${if (runningTaskUiState.task?.inNfcManner == true) "NFC" else "普通"} · ${runningTaskUiState.task?.taskTitle}",
                     overflow = TextOverflow.Ellipsis,
                     maxLines = 1,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -220,13 +226,12 @@ private fun BottomTaskController(
                     onClick = {
                         if (true /* TODO: 非 NFC */) {
                             val record = finishTaskProcess()
-                            performTaskOnce(runningTaskUiState.taskId, record)
+                            runningTaskUiState.task?.let { performTaskOnce(it.id, record) }
                         } else {
                             // TODO: 警告并确认是否终止进行中的持续任务进程
                             finishTaskProcess()
                         }
-                    },
-                    colors = IconButtonColors(
+                    }, colors = IconButtonColors(
                         containerColor = Color.Transparent,
                         contentColor = MaterialTheme.colorScheme.primary,
                         disabledContainerColor = Color.Red,
