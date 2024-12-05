@@ -1,5 +1,8 @@
 package me.snowcube.tapped.models
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,12 +20,16 @@ import javax.inject.Inject
 data class TaskListUiState(val taskList: List<Task> = listOf())
 
 data class TappedAppHomeUiState(
-    // TODO: 对 UI 状态分类嵌套
-
-    val addTaskUiState: AddTaskUiState = AddTaskUiState(),
+    val testState: Int = 0,
+//    val addTaskUiState: AddTaskUiState = AddTaskUiState(),
 )
 
-data class AddTaskUiState(
+data class EditTaskUiState(
+    val taskDetails: TaskDetailsUiState = TaskDetailsUiState(),
+    // 其他 UI 状态，例如是否可编辑
+)
+
+data class TaskDetailsUiState(
     val selectedStartTime: Pair<Int, Int>? = null,
     val selectedEndTime: Pair<Int, Int>? = null,
     val beginDateSelected: Long? = null,
@@ -34,12 +41,12 @@ data class AddTaskUiState(
     val isRepetitive: Boolean = false,
 )
 
-fun AddTaskUiState.inNfcManner(): Boolean = switchSelected == "NFC"
+fun TaskDetailsUiState.inNfcManner(): Boolean = switchSelected == "NFC"
 
 /**
- * Extension function to convert [AddTaskUiState] to [Task].
+ * Extension function to convert [TaskDetailsUiState] to [Task].
  */
-fun AddTaskUiState.toTask(): Task = Task(
+fun TaskDetailsUiState.toTask(): Task = Task(
     taskTitle = taskTitle,
     taskDescription = taskDescription,
     taskTime = "",
@@ -62,6 +69,24 @@ open class TappedAppHomeViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(TappedAppHomeUiState())
     val uiState: StateFlow<TappedAppHomeUiState> = _uiState.asStateFlow()
 
+    /**
+     * Holds current task editing UI state
+     */
+    var editTaskUiState by mutableStateOf(EditTaskUiState())
+        private set
+
+    /**
+     * Updates the [editTaskUiState] with the value provided in the argument. This method also triggers
+     * a validation for input values. // TODO: 输入验证
+     */
+    fun updateEditTaskUiState(taskDetails: TaskDetailsUiState) {
+        editTaskUiState =
+            EditTaskUiState(
+                taskDetails = taskDetails,
+//                isEntryValid = validateInput(taskDetails)
+            )
+    }
+
     val taskListUiState: StateFlow<TaskListUiState> =
         tasksRepository.getAllTasksStream().map { TaskListUiState(it) }.stateIn(
             scope = viewModelScope,
@@ -70,14 +95,15 @@ open class TappedAppHomeViewModel @Inject constructor(
         )
 
     suspend fun saveTask(): Long {
-        return tasksRepository.insertTask(uiState.value.addTaskUiState.toTask())
+        // TODO: 验证输入
+        return tasksRepository.insertTask(editTaskUiState.taskDetails.toTask())
     }
 
-    fun updateAddTaskUiState(addTaskUiState: AddTaskUiState) {
-        _uiState.update { currentState ->
-            currentState.copy(
-                addTaskUiState = addTaskUiState
-            )
-        }
-    }
+//    fun updateAddTaskUiState(editTaskUiState: EditTaskUiState) {
+//        _uiState.update { currentState ->
+//            currentState.copy(
+//                addTaskUiState = editTaskUiState
+//            )
+//        }
+//    }
 }

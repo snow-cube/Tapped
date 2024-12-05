@@ -56,8 +56,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import kotlinx.coroutines.launch
 import me.snowcube.tapped.R
-import me.snowcube.tapped.models.AddTaskUiState
+import me.snowcube.tapped.models.EditTaskUiState
 import me.snowcube.tapped.models.NfcWritingState
+import me.snowcube.tapped.models.TaskDetailsUiState
 import me.snowcube.tapped.models.inNfcManner
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
@@ -71,8 +72,8 @@ fun AddTaskComponent(
     writeTaskToNfc: (taskId: Long) -> Boolean,
     onCloseWritingClick: () -> Unit,
     nfcWritingState: NfcWritingState,
-    addTaskUiState: AddTaskUiState,
-    updateAddTaskUiState: (AddTaskUiState) -> Unit,
+    editTaskUiState: EditTaskUiState,
+    updateEditTaskUiState: (TaskDetailsUiState) -> Unit,
 ) {
 
     val coroutineScope = rememberCoroutineScope()
@@ -109,9 +110,15 @@ fun AddTaskComponent(
 //                    fontWeight = FontWeight.Bold
 //                )
                 TextSwitch(
-                    selected = addTaskUiState.switchSelected,
+                    selected = editTaskUiState.taskDetails.switchSelected,
                     btnList = listOf("NFC", "普通"),
-                    onSelectedChanged = { updateAddTaskUiState(addTaskUiState.copy(switchSelected = it)) },
+                    onSelectedChanged = {
+                        updateEditTaskUiState(
+                            editTaskUiState.taskDetails.copy(
+                                switchSelected = it
+                            )
+                        )
+                    },
                     roundedCorner = true,
                     modifier = modifier
                         .width(120.dp)
@@ -148,10 +155,11 @@ fun AddTaskComponent(
                         modifier = modifier.height(36.dp)
                     ) {
                         Text(
-                            if (addTaskUiState.inNfcManner()) "保存并写入" else "保存",
+                            if (editTaskUiState.taskDetails.inNfcManner()) "保存并写入" else "保存",
                             style = MaterialTheme.typography.titleMedium,
                             fontWeight = FontWeight.Bold
                         )
+                        Spacer(modifier = modifier.width(5.dp))
                         Icon(
                             imageVector = Icons.Default.Done,
                             contentDescription = "Finish task adding page"
@@ -161,11 +169,11 @@ fun AddTaskComponent(
             }
 
             OutlinedInput(
-                value = addTaskUiState.taskTitle,
-                onValueChange = { updateAddTaskUiState(addTaskUiState.copy(taskTitle = it)) },
+                value = editTaskUiState.taskDetails.taskTitle,
+                onValueChange = { updateEditTaskUiState(editTaskUiState.taskDetails.copy(taskTitle = it)) },
                 trailingIcon = {
                     IconButton(
-                        onClick = { updateAddTaskUiState(addTaskUiState.copy(taskTitle = "")) },
+                        onClick = { updateEditTaskUiState(editTaskUiState.taskDetails.copy(taskTitle = "")) },
                         colors = IconButtonDefaults.iconButtonColors(
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -180,12 +188,24 @@ fun AddTaskComponent(
             )
 
             TextField(
-                value = addTaskUiState.taskDescription,
-                onValueChange = { updateAddTaskUiState(addTaskUiState.copy(taskDescription = it)) },
+                value = editTaskUiState.taskDetails.taskDescription,
+                onValueChange = {
+                    updateEditTaskUiState(
+                        editTaskUiState.taskDetails.copy(
+                            taskDescription = it
+                        )
+                    )
+                },
                 label = { Text("描述信息") },
                 trailingIcon = {
                     IconButton(
-                        onClick = { updateAddTaskUiState(addTaskUiState.copy(taskDescription = "")) },
+                        onClick = {
+                            updateEditTaskUiState(
+                                editTaskUiState.taskDetails.copy(
+                                    taskDescription = ""
+                                )
+                            )
+                        },
                         colors = IconButtonDefaults.iconButtonColors(
                             contentColor = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -203,9 +223,9 @@ fun AddTaskComponent(
 
             SettingItemSwitch(
                 label = "持续任务",
-                checked = addTaskUiState.isContinuous,
+                checked = editTaskUiState.taskDetails.isContinuous,
                 onCheckedChange = {
-                    updateAddTaskUiState(addTaskUiState.copy(isContinuous = it))
+                    updateEditTaskUiState(editTaskUiState.taskDetails.copy(isContinuous = it))
                 },
                 modifier
             )
@@ -217,18 +237,18 @@ fun AddTaskComponent(
             ) {
                 TimePickerComponent(
                     label = "开始时间",
-                    selectedTime = addTaskUiState.selectedStartTime,
+                    selectedTime = editTaskUiState.taskDetails.selectedStartTime,
                     updateTime = {
-                        updateAddTaskUiState(addTaskUiState.copy(selectedStartTime = it))
+                        updateEditTaskUiState(editTaskUiState.taskDetails.copy(selectedStartTime = it))
                     },
                     onDismiss = { },
                     modifier = Modifier.weight(1f)
                 )
                 TimePickerComponent(
                     label = "结束时间",
-                    selectedTime = addTaskUiState.selectedEndTime,
+                    selectedTime = editTaskUiState.taskDetails.selectedEndTime,
                     updateTime = {
-                        updateAddTaskUiState(addTaskUiState.copy(selectedEndTime = it))
+                        updateEditTaskUiState(editTaskUiState.taskDetails.copy(selectedEndTime = it))
                     },
                     onDismiss = { },
                     modifier = Modifier.weight(1f)
@@ -237,11 +257,11 @@ fun AddTaskComponent(
 
             // TODO: 支持仅结束日期，无开始日期
             DatePickerComponent(
-                beginDateSelected = addTaskUiState.beginDateSelected,
-                endDateSelected = addTaskUiState.endDateSelected,
+                beginDateSelected = editTaskUiState.taskDetails.beginDateSelected,
+                endDateSelected = editTaskUiState.taskDetails.endDateSelected,
                 updateDateRange = {
-                    updateAddTaskUiState(
-                        addTaskUiState.copy(
+                    updateEditTaskUiState(
+                        editTaskUiState.taskDetails.copy(
                             beginDateSelected = it.first, endDateSelected = it.second
                         )
                     )
@@ -274,14 +294,14 @@ fun AddTaskComponent(
         ConfigDialog(
             title = "重复设置",
             showConfirm = false,
-            onDismiss = {showRepetitionConfig = false},
+            onDismiss = { showRepetitionConfig = false },
             modifier = modifier.width(350.dp)
         ) {
             SettingItemSwitch(
                 label = "重复",
-                checked = addTaskUiState.isRepetitive,
+                checked = editTaskUiState.taskDetails.isRepetitive,
                 onCheckedChange = {
-                    updateAddTaskUiState(addTaskUiState.copy(isRepetitive = it))
+                    updateEditTaskUiState(editTaskUiState.taskDetails.copy(isRepetitive = it))
                 },
             )
         }
@@ -506,8 +526,8 @@ fun AddTaskComponentPreview() {
                 writeTaskToNfc = { false },
                 onCloseWritingClick = {},
                 nfcWritingState = NfcWritingState.Closed,
-                addTaskUiState = AddTaskUiState(),
-                updateAddTaskUiState = {})
+                editTaskUiState = EditTaskUiState(),
+                updateEditTaskUiState = {})
         }
     }
 }
@@ -527,8 +547,8 @@ fun AddTaskComponentWritingPreview() {
                 writeTaskToNfc = { false },
                 onCloseWritingClick = {},
                 nfcWritingState = NfcWritingState.Writing,
-                addTaskUiState = AddTaskUiState(),
-                updateAddTaskUiState = {})
+                editTaskUiState = EditTaskUiState(),
+                updateEditTaskUiState = {})
         }
     }
 }
@@ -548,8 +568,8 @@ fun AddTaskComponentFailedPreview() {
                 writeTaskToNfc = { false },
                 onCloseWritingClick = {},
                 nfcWritingState = NfcWritingState.Failed,
-                addTaskUiState = AddTaskUiState(),
-                updateAddTaskUiState = {})
+                editTaskUiState = EditTaskUiState(),
+                updateEditTaskUiState = {})
         }
     }
 }

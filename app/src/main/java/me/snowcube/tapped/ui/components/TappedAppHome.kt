@@ -2,6 +2,7 @@ package me.snowcube.tapped.ui.components
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -236,7 +237,8 @@ fun TappedAppHome(
             ),
             containerColor = MaterialTheme.colorScheme.surfaceBright,
 //            modifier = Modifier.fillMaxHeight(),
-            modifier = Modifier.height(600.dp),
+//            modifier = Modifier.height(600.dp),
+            modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min),
             sheetState = sheetState,
             onDismissRequest = { showBottomSheet = false }) {
             AddTaskComponent(
@@ -249,8 +251,8 @@ fun TappedAppHome(
                 },
                 writeTaskToNfc = writeTaskToNfc,
                 onCloseWritingClick = onCloseWritingClick,
-                addTaskUiState = homeUiState.addTaskUiState,
-                updateAddTaskUiState = viewModel::updateAddTaskUiState,
+                editTaskUiState = viewModel.editTaskUiState,
+                updateEditTaskUiState = viewModel::updateEditTaskUiState,
                 saveTask = viewModel::saveTask,
                 modifier = Modifier.safeDrawingPadding()
             )
