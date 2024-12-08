@@ -40,6 +40,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -104,7 +105,8 @@ fun BottomBar(
                         color = MaterialTheme.colorScheme.primary,
                         shape = MaterialTheme.shapes.extraLarge
                     )
-                    .height(60.dp)
+                    .height(56.dp)
+//                    .width(214.dp)
                     .width(230.dp)
                     .padding(4.dp)
                     .align(Alignment.CenterVertically)
@@ -135,8 +137,8 @@ fun BottomBar(
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 containerColor = MaterialTheme.colorScheme.primary,
                 modifier = modifier
-                    .height(52.dp)
-                    .width(52.dp)
+                    .height(48.dp)
+                    .width(48.dp)
                     .align(Alignment.CenterVertically)
             ) {
                 Icon(
@@ -269,21 +271,24 @@ private fun NavBtn(
         ),
         modifier = modifier
             .fillMaxHeight()
-            .width(if (selected) 110.dp else 53.dp)
+            .width(if (selected) 110.dp else 48.dp)
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
             modifier = modifier
-                .size(30.dp)
+                .size(27.dp)
                 .align(Alignment.CenterVertically)
         )
         if (selected) {
-            Spacer(modifier.width(7.dp))
+//            Spacer(modifier.width(7.dp))
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                letterSpacing = 3.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.width(62.dp) // 58 = 110 (width of nav button) - 52 (height of nav button)
             )
         }
 

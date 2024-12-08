@@ -96,7 +96,9 @@ fun TappedAppHome(
     val scope = rememberCoroutineScope()
 
     ModalNavigationDrawer(drawerState = drawerState, drawerContent = {
-        ModalDrawerSheet {
+        ModalDrawerSheet(
+            modifier = Modifier.width(330.dp)
+        ) {
             Text("Drawer title", modifier = Modifier.padding(16.dp))
             HorizontalDivider()
             NavigationDrawerItem(label = { Text(text = "Drawer Item") },
@@ -140,7 +142,9 @@ fun TappedAppHome(
                                 TaskListEnv.Personal.name -> "个人"
                                 TaskListEnv.Team.name -> "小组"
                                 else -> "个人"
-                            }, btnList = listOf("个人", "小组"), onSelectedChanged = {
+                            },
+                            btnList = listOf("个人", "小组"),
+                            onSelectedChanged = {
                                 navController.navigate(
                                     when (it) {
                                         "个人" -> TaskListEnv.Personal.name
@@ -162,7 +166,9 @@ fun TappedAppHome(
                                 }
                             },
 //                                backgroundColor = MaterialTheme.colorScheme.surfaceBright,
-                            modifier = Modifier.width(140.dp)
+                            modifier = Modifier
+                                .width(140.dp)
+                                .height(34.dp)
                         )
                     }
                     IconButton(onClick = { /* do something */ }) {
