@@ -5,7 +5,7 @@ import me.snowcube.tapped.data.source.local.Task
 
 @Composable
 fun PersonalTaskList(
-    taskList: List<Task>, onTaskItemClick: (taskId: Int) -> Unit
+    taskList: List<Task>, onTaskItemClick: (taskId: Long) -> Unit
 ) {
     // TODO: 直接封装到一个 folder 中
     TaskListBody(

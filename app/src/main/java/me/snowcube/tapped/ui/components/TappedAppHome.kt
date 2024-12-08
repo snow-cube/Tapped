@@ -2,6 +2,7 @@ package me.snowcube.tapped.ui.components
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -69,15 +70,15 @@ val screenItems = listOf(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TappedAppHome(
-    onTaskItemClick: (taskId: Int) -> Unit,
-    onWriteClick: () -> Unit,
+    onTaskItemClick: (taskId: Long) -> Unit,
+    writeTaskToNfc: (taskId: Long) -> Boolean,
     finishTaskProcess: () -> TaskProcessRecord?,
     performTaskOnce: (
-        taskId: Int, taskProcessRecord: TaskProcessRecord?
+        taskId: Long, taskProcessRecord: TaskProcessRecord?
     ) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
-    onBottomTaskControllerClick: (taskId: Int) -> Unit,
+    onBottomTaskControllerClick: (taskId: Long) -> Unit,
     tappedUiState: TappedUiState,
     onCloseWritingClick: () -> Unit,
     viewModel: TappedAppHomeViewModel = hiltViewModel()
@@ -95,7 +96,9 @@ fun TappedAppHome(
     val scope = rememberCoroutineScope()
 
     ModalNavigationDrawer(drawerState = drawerState, drawerContent = {
-        ModalDrawerSheet {
+        ModalDrawerSheet(
+            modifier = Modifier.width(330.dp)
+        ) {
             Text("Drawer title", modifier = Modifier.padding(16.dp))
             HorizontalDivider()
             NavigationDrawerItem(label = { Text(text = "Drawer Item") },
@@ -139,7 +142,9 @@ fun TappedAppHome(
                                 TaskListEnv.Personal.name -> "个人"
                                 TaskListEnv.Team.name -> "小组"
                                 else -> "个人"
-                            }, btnList = listOf("个人", "小组"), onSelectedChanged = {
+                            },
+                            btnList = listOf("个人", "小组"),
+                            onSelectedChanged = {
                                 navController.navigate(
                                     when (it) {
                                         "个人" -> TaskListEnv.Personal.name
@@ -161,7 +166,9 @@ fun TappedAppHome(
                                 }
                             },
 //                                backgroundColor = MaterialTheme.colorScheme.surfaceBright,
-                            modifier = Modifier.width(140.dp)
+                            modifier = Modifier
+                                .width(140.dp)
+                                .height(34.dp)
                         )
                     }
                     IconButton(onClick = { /* do something */ }) {
@@ -236,7 +243,8 @@ fun TappedAppHome(
             ),
             containerColor = MaterialTheme.colorScheme.surfaceBright,
 //            modifier = Modifier.fillMaxHeight(),
-            modifier = Modifier.height(600.dp),
+//            modifier = Modifier.height(600.dp),
+            modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min),
             sheetState = sheetState,
             onDismissRequest = { showBottomSheet = false }) {
             AddTaskComponent(
@@ -247,10 +255,10 @@ fun TappedAppHome(
 
                     showBottomSheet = false
                 },
-                onWriteClick = onWriteClick,
+                writeTaskToNfc = writeTaskToNfc,
                 onCloseWritingClick = onCloseWritingClick,
-                addTaskUiState = homeUiState.addTaskUiState,
-                updateAddTaskUiState = viewModel::updateAddTaskUiState,
+                editTaskUiState = viewModel.editTaskUiState,
+                updateEditTaskUiState = viewModel::updateEditTaskUiState,
                 saveTask = viewModel::saveTask,
                 modifier = Modifier.safeDrawingPadding()
             )
@@ -265,7 +273,7 @@ fun TaskAppPreview() {
     TappedTheme {
         TappedAppHome(
             onTaskItemClick = {},
-            onWriteClick = {},
+            writeTaskToNfc = { false },
             finishTaskProcess = { null },
             performTaskOnce = { _, _ -> },
             onPauseTask = {},

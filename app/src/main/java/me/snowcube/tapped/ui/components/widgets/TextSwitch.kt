@@ -34,14 +34,15 @@ fun TextSwitch(
     modifier: Modifier = Modifier,
     backgroundColor: Color = MaterialTheme.colorScheme.primary,
     color: Color = MaterialTheme.colorScheme.surfaceBright,
+    roundedCorner: Boolean = false
 ) {
     Surface(
         color = backgroundColor,
-        shape = RoundedCornerShape(12.dp),
+        shape = if (roundedCorner) RoundedCornerShape(100.dp) else RoundedCornerShape(12.dp),
         modifier = modifier
-            .background(color = backgroundColor, shape = RoundedCornerShape(14.dp))
+            .background(color = backgroundColor, shape = if (roundedCorner) RoundedCornerShape(100.dp) else RoundedCornerShape(14.dp))
+            .height(36.dp)
             .padding(2.dp)
-            .height(32.dp)
     ) {
         Row {
             btnList.forEach() { btnName ->
@@ -52,6 +53,7 @@ fun TextSwitch(
                     onClick = {
                         onSelectedChanged(btnName)
                     },
+                    roundedCorner = roundedCorner,
                     modifier = modifier
                         .weight(1f)
                         .fillMaxWidth()
@@ -69,6 +71,7 @@ private fun TextSwitchBtn(
     onClick: () -> Unit,
     modifier: Modifier,
     color: Color,
+    roundedCorner: Boolean
 ) {
     Button(
         onClick = onClick,
@@ -78,7 +81,7 @@ private fun TextSwitchBtn(
             disabledContainerColor = Color.Red,
             disabledContentColor = Color.White
         ),
-        shape = RoundedCornerShape(12.dp),
+        shape = if (roundedCorner) RoundedCornerShape(100.dp) else RoundedCornerShape(12.dp),
         contentPadding = PaddingValues(0.dp),
         modifier = modifier
     ) {
@@ -97,6 +100,22 @@ private fun TextSwitchPreview() {
                 "Option 2"
             ),
             onSelectedChanged = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun TextSwitchRoundedCornerPreview() {
+    TappedTheme() {
+        TextSwitch(
+            selected = "Option 1",
+            btnList = listOf(
+                "Option 1",
+                "Option 2"
+            ),
+            onSelectedChanged = {},
+            roundedCorner = true
         )
     }
 }

@@ -43,7 +43,7 @@ import me.snowcube.tapped.ui.theme.variantsColor
 
 @Composable
 fun TaskListBody(
-    onTaskItemClick: (taskId: Int) -> Unit, taskList: List<List<Task>>
+    onTaskItemClick: (taskId: Long) -> Unit, taskList: List<List<Task>>
 ) {
     CommonView(taskList[0], onTaskItemClick)
 //    FolderView(taskList, onTaskItemClick)
@@ -51,7 +51,7 @@ fun TaskListBody(
 
 @Composable
 private fun FolderView(
-    taskList: List<List<Task>>, onTaskItemClick: (taskId: Int) -> Unit
+    taskList: List<List<Task>>, onTaskItemClick: (taskId: Long) -> Unit
 ) {
     LazyColumn(
         verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier
@@ -74,7 +74,7 @@ private fun FolderView(
 
 @Composable
 private fun CommonView(
-    taskList: List<Task>, onTaskItemClick: (taskId: Int) -> Unit
+    taskList: List<Task>, onTaskItemClick: (taskId: Long) -> Unit
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceBright,
@@ -114,7 +114,7 @@ private fun CommonView(
  separate properties */
 @Composable
 private fun TaskFolder(
-    folderName: String, themeColor: Color, onTaskItemClick: (taskId: Int) -> Unit, tasks: List<Task>
+    folderName: String, themeColor: Color, onTaskItemClick: (taskId: Long) -> Unit, tasks: List<Task>
 ) {
 //    val initialFolded = tasks.isEmpty()
     val initialFolded = false
@@ -209,13 +209,13 @@ private fun TaskFolder(
 
 @Composable
 private fun TaskItem(
-    onTaskItemClick: (taskId: Int) -> Unit, task: Task
+    onTaskItemClick: (taskId: Long) -> Unit, task: Task
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Surface(
-            color = StateColor.entries[task.id % 4].color,
+            color = StateColor.entries[(task.id % 4).toInt()].color,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
                 .width(6.dp)

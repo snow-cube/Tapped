@@ -23,7 +23,7 @@ import me.snowcube.tapped.data.source.local.Task
 import me.snowcube.tapped.ui.theme.TappedTheme
 
 @Composable
-fun TeamTaskList(onTaskItemClick: (taskId: Int) -> Unit) {
+fun TeamTaskList(onTaskItemClick: (taskId: Long) -> Unit) {
     Column() {
         TeamInfoBoard()
         TaskListBody(onTaskItemClick = onTaskItemClick, taskList = listOf(listOf()))

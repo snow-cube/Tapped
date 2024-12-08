@@ -66,12 +66,11 @@ fun DatePickerComponent(
             "$beginDateSelectedFormatted - $endDateSelectedFormatted"
         }
 
-    OutlinedTextField(
+    OutlinedInput(
         value = displayDateRange,
         onValueChange = { },
-        label = { Text("任务日期") },
+        label = "任务日期",
         readOnly = true,
-        shape = MaterialTheme.shapes.medium,
         trailingIcon = {
             IconButton(onClick = { showDatePicker = !showDatePicker }) {
                 Icon(
@@ -82,7 +81,6 @@ fun DatePickerComponent(
         },
         modifier = Modifier
             .fillMaxWidth()
-            .height(64.dp)
     )
 
     if (showDatePicker) {

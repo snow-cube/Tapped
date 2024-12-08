@@ -15,12 +15,12 @@ interface TasksRepository {
     /**
      * Retrieve an task from the given data source that matches with the [id].
      */
-    fun getTaskStream(id: Int): Flow<Task?>
+    fun getTaskStream(id: Long): Flow<Task?>
 
     /**
      * Insert task in the data source
      */
-    suspend fun insertTask(task: Task)
+    suspend fun insertTask(task: Task): Long
 
     /**
      * Delete task from the data source
@@ -32,7 +32,7 @@ interface TasksRepository {
      */
     suspend fun updateTask(task: Task)
 
-    suspend fun completeTask(taskId: Int)
+    suspend fun completeTask(taskId: Long)
 
 //    suspend fun appendTaskRecord(taskId: Int, taskRecord)
 }

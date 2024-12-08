@@ -41,28 +41,29 @@ import java.util.Locale
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TimePickerComponent(
+    label: String,
     selectedTime: Pair<Int, Int>?,
-    updateTime: (Pair<Int, Int>) -> Unit,
+    updateTime: (Pair<Int, Int>?) -> Unit,
     onDismiss: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
 
     var showTimePicker by remember { mutableStateOf(false) }
     val currentTime = Calendar.getInstance()
 
-    val timePickerState: TimePickerState =
-        if (selectedTime == null) {
-            rememberTimePickerState(
-                initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
-                initialMinute = currentTime.get(Calendar.MINUTE),
-                is24Hour = false, // TODO: Enable to switch between 12 & 24 h
-            )
-        } else {
-            rememberTimePickerState(
-                initialHour = selectedTime.first,
-                initialMinute = selectedTime.second,
-                is24Hour = false, // TODO: Enable to switch between 12 & 24 h
-            )
-        }
+    val timePickerState: TimePickerState = if (selectedTime == null) {
+        rememberTimePickerState(
+            initialHour = currentTime.get(Calendar.HOUR_OF_DAY),
+            initialMinute = currentTime.get(Calendar.MINUTE),
+            is24Hour = false, // TODO: Enable to switch between 12 & 24 h
+        )
+    } else {
+        rememberTimePickerState(
+            initialHour = selectedTime.first,
+            initialMinute = selectedTime.second,
+            is24Hour = false, // TODO: Enable to switch between 12 & 24 h
+        )
+    }
 
     val formatter = remember { SimpleDateFormat("hh:mm a", Locale.getDefault()) }
     var displayTime = ""
@@ -85,12 +86,11 @@ fun TimePickerComponent(
         ImageVector.vectorResource(R.drawable.baseline_access_time_filled_24)
     }
 
-    OutlinedTextField(
+    OutlinedInput(
         value = displayTime,
         onValueChange = { },
-        label = { Text("任务时间") },
+        label = label,
         readOnly = true,
-        shape = MaterialTheme.shapes.medium,
         trailingIcon = {
             IconButton(onClick = { showTimePicker = !showTimePicker }) {
                 Icon(
@@ -99,9 +99,7 @@ fun TimePickerComponent(
                 )
             }
         },
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(64.dp)
+        modifier = modifier.fillMaxWidth()
     )
 
     if (showTimePicker) {
@@ -110,12 +108,13 @@ fun TimePickerComponent(
                 onDismiss()
                 showTimePicker = false
             },
+            onClear = {
+                updateTime(null)
+                showTimePicker = false
+            },
             onConfirm = {
                 updateTime(
-                    Pair(
-                        timePickerState.hour,
-                        timePickerState.minute
-                    )
+                    Pair(timePickerState.hour, timePickerState.minute)
                 )
 
                 showTimePicker = false
@@ -128,17 +127,19 @@ fun TimePickerComponent(
                     )
                 }
             },
-        ) {
-            if (showDial) {
-                TimePicker(
-                    state = timePickerState,
-                )
-            } else {
-                TimeInput(
-                    state = timePickerState,
-                )
-            }
-        }
+            content = {
+                if (showDial) {
+                    TimePicker(
+                        state = timePickerState,
+                    )
+                } else {
+                    TimeInput(
+                        state = timePickerState,
+                    )
+                }
+            },
+            modifier = modifier
+        )
     }
 }
 
@@ -146,9 +147,11 @@ fun TimePickerComponent(
 fun TimePickerDialog(
     title: String = "选择时间",
     onDismiss: () -> Unit,
+    onClear: () -> Unit,
     onConfirm: () -> Unit,
     toggle: @Composable () -> Unit = {},
     content: @Composable () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Dialog(
         onDismissRequest = onDismiss,
@@ -157,33 +160,35 @@ fun TimePickerDialog(
         Surface(
             shape = MaterialTheme.shapes.large,
             tonalElevation = 6.dp,
-            modifier = Modifier
+            modifier = modifier
                 .width(IntrinsicSize.Min)
                 .height(IntrinsicSize.Min)
                 .background(
-                    shape = MaterialTheme.shapes.large,
-                    color = MaterialTheme.colorScheme.surface
+                    shape = MaterialTheme.shapes.large, color = MaterialTheme.colorScheme.surface
                 ),
         ) {
             Column(
-                modifier = Modifier.padding(24.dp),
+                modifier = modifier.padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Text(
-                    modifier = Modifier
+                    modifier = modifier
                         .fillMaxWidth()
                         .padding(bottom = 20.dp),
                     text = title,
                     style = MaterialTheme.typography.labelLarge
                 )
+
                 content()
+
                 Row(
-                    modifier = Modifier
+                    modifier = modifier
                         .height(40.dp)
                         .fillMaxWidth()
                 ) {
                     toggle()
-                    Spacer(modifier = Modifier.weight(1f))
+                    Spacer(modifier = modifier.weight(1f))
+                    TextButton(onClick = onClear) { Text("Clear") }
                     TextButton(onClick = onDismiss) { Text("Cancel") }
                     TextButton(onClick = onConfirm) { Text("OK") }
                 }
