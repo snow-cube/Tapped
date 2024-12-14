@@ -1,5 +1,6 @@
 [versions]
 agp = "8.7.1"
+constraintlayoutCompose = "1.1.0"
 hilt = "2.50"
 hiltNavigationCompose = "1.2.0"
 kotlin = "2.0.21"
@@ -16,6 +17,7 @@ navVersion = "2.8.0"
 roomVersion = "2.6.1"
 
 [libraries]
+androidx-constraintlayout-compose = { module = "androidx.constraintlayout:constraintlayout-compose", version.ref = "constraintlayoutCompose" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
 androidx-navigation-fragment = { module = "androidx.navigation:navigation-fragment", version.ref = "navVersion" }

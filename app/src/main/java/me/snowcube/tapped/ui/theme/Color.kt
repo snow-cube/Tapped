@@ -32,8 +32,9 @@ val paletteColor = PaletteColor(
     darkYellow = Color(0xFFA66F1C),
 
     backgroundGreen = Color(0xFF88D8B0),
-    backgroundYellow = Color(0xFFFDCB7D),
-    backgroundBlue = Color(0xFF83D1F5),
+    backgroundYellow = Color(0xFFE8D18F),
+//    backgroundBlue = Color(0xFF83D1F5),
+    backgroundBlue = Color(0xFF5CC5D7),
 
     invalidGrey = Color(0xFFB4B4B4)
 )
