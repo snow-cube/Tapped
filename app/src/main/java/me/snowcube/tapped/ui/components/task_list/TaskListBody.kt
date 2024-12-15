@@ -215,7 +215,7 @@ private fun TaskItem(
         horizontalArrangement = Arrangement.spacedBy(5.dp)
     ) {
         Surface(
-            color = StateColor.entries[(task.id % 4).toInt()].color,
+            color = if (task.isCompleted) MaterialTheme.colorScheme.surfaceDim else StateColor.entries[(task.id % 4).toInt()].color,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
                 .width(6.dp)

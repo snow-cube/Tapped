@@ -71,6 +71,7 @@ fun TappedApp(
             val route: TaskDetailRoute = backStackEntry.toRoute()
             Log.d("TappedApp", "After toRoute()")
             TaskDetail(
+                navigateBack = { taskAppNavController.popBackStack() },
                 tappedUiState = tappedUiState,
                 onStartNewTask = onStartNewTask,
                 onContinueTask = onContinueTask,

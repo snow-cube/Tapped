@@ -2,30 +2,36 @@ package me.snowcube.tapped.ui.components
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -33,12 +39,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.FocusRequester.Companion.createRefs
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -49,7 +53,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.room.util.TableInfo
 import kotlinx.serialization.Serializable
 import me.snowcube.tapped.R
 import me.snowcube.tapped.data.source.local.Task
@@ -72,6 +75,7 @@ object TaskStatistics
 
 @Composable
 fun TaskDetail(
+    navigateBack: () -> Unit,
     onStartNewTask: (task: Task) -> Unit,
     finishTaskProcess: () -> TaskProcessRecord?, // 将持续任务的运行进程成功结束，返回运行记录
     performTaskOnce: (
@@ -107,6 +111,7 @@ fun TaskDetail(
                 ContinuousTaskPanel(
                     tappedUiState,
                     uiState,
+                    navigateBack,
                     onStartNewTask,
                     onPauseTask,
                     onContinueTask,
@@ -115,111 +120,72 @@ fun TaskDetail(
                 )
 
             } else {
-                NonContinuousTaskPanel(uiState, performTaskOnce)
+                NonContinuousTaskPanel(
+                    uiState,
+                    navigateBack,
+                    performTaskOnce)
             }
         }
         composable<EditTask> { }
         composable<TaskStatistics> {}
     }
-
 }
 
 @Composable
 private fun NonContinuousTaskPanel(
-    uiState: TaskDetailUiState, performTaskOnce: (Long, TaskProcessRecord?) -> Unit
+    uiState: TaskDetailUiState,
+    navigateBack: () -> Unit,
+    performTaskOnce: (Long, TaskProcessRecord?) -> Unit
 ) {
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-    ) {
-        ConstraintLayout {
-            val (majorInfo, minorInfo, controllerBar) = createRefs()
+    TaskPanelBase(
+        taskDetailUiState = uiState,
+        navigateBack = navigateBack,
+        backgroundColor = MaterialTheme.colorScheme.surface,
+        foregroundColor = MaterialTheme.colorScheme.onSurface,
+        elevationColor = MaterialTheme.colorScheme.surfaceBright,
+        majorInfoContent = {
+            TaskInfo(uiState.task, textColor = MaterialTheme.colorScheme.onSurface)
+        },
+        controllerBarContent = {
+            Button(
+                enabled = uiState.task?.isCompleted == false, // TODO: 任务非 NFC
+                onClick = {
+                    uiState.task?.let { task -> performTaskOnce(task.id, null) }
+                },
+                contentPadding = PaddingValues(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    contentColor = MaterialTheme.colorScheme.onTertiary,
+                    containerColor = MaterialTheme.colorScheme.tertiary,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceDim
 
-            Surface(shape = RoundedCornerShape(
-                bottomStart = 32.dp,
-                bottomEnd = 32.dp,
-            ),
-//                tonalElevation = 2.dp,
-                color = MaterialTheme.colorScheme.surfaceBright, modifier = Modifier
-                    .constrainAs(majorInfo) {
-                        top.linkTo(parent.top, margin = 0.dp)
-                    }
-                    .fillMaxWidth()
-                    .fillMaxHeight(fraction = 0.75f)) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .fillMaxHeight()
-                        .safeDrawingPadding()
-                ) {
-                    TaskInfo(uiState.task, textColor = MaterialTheme.colorScheme.onSurface)
-                }
-            }
-
-            Column(verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .constrainAs(minorInfo) {
-                        top.linkTo(majorInfo.bottom, margin = 0.dp)
-                    }
-                    .fillMaxWidth()
-                    .fillMaxHeight(fraction = 0.25f)
-                    .safeDrawingPadding()) {
-                Text("任务历史总结")
-            }
-
-            Row(horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .constrainAs(controllerBar) {
-                        top.linkTo(majorInfo.bottom, margin = (-30).dp)
-                    }
-//                    .background(color = Color(0x10000000))
-                    .fillMaxWidth()
-                    .height(60.dp)) {
-                Button(
-                    enabled = uiState.task?.isCompleted == false, // TODO: 任务非 NFC
-                    onClick = {
-                        uiState.task?.let { task -> performTaskOnce(task.id, null) }
-                    },
-                    contentPadding = PaddingValues(10.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        contentColor = MaterialTheme.colorScheme.onTertiary,
-                        containerColor = MaterialTheme.colorScheme.tertiary,
-                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceDim
-
-                    ),
-                    border = BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.secondary)
+                ),
+                border = BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.secondary)
 //                        modifier = Modifier.size(80.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Done,
-                        contentDescription = "Complete the task",
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Text(
-                        text = if (uiState.task?.isCompleted == true) "已完成" else "完成",
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Done,
+                    contentDescription = "Complete the task",
+                    modifier = Modifier.size(28.dp)
+                )
+                Text(
+                    text = if (uiState.task?.isCompleted == true) "已完成" else "完成",
 //                            text = "TERMINATE",
 //                            text = "FINISH",
-                        style = MaterialTheme.typography.titleMedium,
-                        letterSpacing = 2.sp,
-                        modifier = Modifier.padding(horizontal = 10.dp)
-                    )
-                }
+                    style = MaterialTheme.typography.titleMedium,
+                    letterSpacing = 2.sp,
+                    modifier = Modifier.padding(horizontal = 10.dp)
+                )
             }
         }
-    }
+    )
 }
 
 @Composable
 private fun ContinuousTaskPanel(
     tappedUiState: TappedUiState,
     taskDetailUiState: TaskDetailUiState,
+    navigateBack: () -> Unit,
     onStartNewTask: (Task) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
@@ -236,67 +202,239 @@ private fun ContinuousTaskPanel(
         if (isRelatedTaskHasProcess) DateUtils.formatElapsedTime(tappedUiState.runningTaskUiState.currentTaskTime.toLong())
         else DateUtils.formatElapsedTime(0)
 
-    val formattedAccumulatedTime = DateUtils.formatElapsedTime(0)
+//    val formattedAccumulatedTime = DateUtils.formatElapsedTime(0)
 
     val stateColor =
         if (isRelatedTaskHasProcess) if (tappedUiState.runningTaskUiState.isRunning) paletteColor.backgroundGreen else paletteColor.backgroundYellow
         else paletteColor.backgroundBlue
 
+    TaskPanelBase(
+        taskDetailUiState = taskDetailUiState,
+        navigateBack = navigateBack,
+        backgroundColor = stateColor,
+        foregroundColor = Color.White,
+        elevationColor = Color(0x2AFFFFFF),
+        indicatorColor = MaterialTheme.colorScheme.secondary,
+        indicatorBackgroundColor = MaterialTheme.colorScheme.surface,
+        indicatorTrackColor = MaterialTheme.colorScheme.surfaceDim,
+        indicatorIconBorderColor = MaterialTheme.colorScheme.surfaceDim,
+        indicatorIconSurfaceColor = MaterialTheme.colorScheme.secondary, // TODO: 改为完成状态色
+        majorInfoContent = {
+            // TODO: 圆形可点击，控制任务开始暂停
+            Surface(
+                color = Color(0x0C000000),
+                shape = RoundedCornerShape(500.dp),
+                modifier = Modifier.size(290.dp)
+            ) {
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        taskStateText,
+                        style = MaterialTheme.typography.displaySmall,
+                        color = Color.White,
+                    )
+                    if (isRelatedTaskHasProcess) {
+                        Spacer(Modifier.height(15.dp))
+                        Text(
+                            formattedTime,
+                            style = MaterialTheme.typography.displayLarge,
+                            color = Color.White,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
+            }
+
+            TaskInfo(taskDetailUiState.task)
+        },
+        controllerBarContent = {
+            Button(
+                enabled = taskDetailUiState.task?.isCompleted == false, // TODO: 非 NFC 不可开启 但可暂停
+                onClick = {
+                    if (!tappedUiState.hasTaskProcess) {
+                        onStartNewTask(taskDetailUiState.task!!)
+                    } else {
+                        if (isRelatedTaskHasProcess) { // 是本任务
+                            if (tappedUiState.runningTaskUiState.isRunning) {
+                                onPauseTask()
+                            } else {
+                                onContinueTask()
+                            }
+                        } else {
+                            // TODO: 警告是否终止 / 完成已存在任务并开启本任务
+                        }
+                    }
+                },
+                contentPadding = PaddingValues(10.dp),
+                modifier = if (isRelatedTaskHasProcess) Modifier
+                    .height(48.dp)
+                    .width(48.dp)
+                else Modifier
+                    .height(48.dp),
+                colors = ButtonDefaults.buttonColors(
+                    contentColor = MaterialTheme.colorScheme.onSurface,
+                    containerColor = MaterialTheme.colorScheme.surfaceBright,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceDim
+                ),
+            ) {
+                Icon(
+                    imageVector = if (isRelatedTaskHasProcess && tappedUiState.runningTaskUiState.isRunning) ImageVector.vectorResource(
+                        R.drawable.baseline_pause_24
+                    )
+                    else Icons.Default.PlayArrow,
+                    contentDescription = "Start / Pause / Continue",
+                    modifier = Modifier.size(28.dp)
+                )
+                if (!isRelatedTaskHasProcess) {
+                    Text(
+//                            text = "START",
+                        text = if (taskDetailUiState.task?.isCompleted == true) "已完成" else "开始",
+                        style = MaterialTheme.typography.titleMedium,
+                        letterSpacing = 2.sp,
+                        modifier = Modifier.padding(horizontal = 10.dp)
+                    )
+                }
+            }
+            if (isRelatedTaskHasProcess) {
+                Spacer(Modifier.width(20.dp))
+                Button(
+                    enabled = true,
+                    onClick = {
+                        if (true /* TODO: 非 NFC */) {
+                            taskDetailUiState.task?.let { task ->
+                                val record = finishTaskProcess()
+                                performTaskOnce(taskDetailUiState.task.id, record)
+                            }
+                        } else {
+                            // TODO: 警告并确认是否终止进行中的持续任务进程
+                            finishTaskProcess()
+                        }
+                    },
+                    contentPadding = PaddingValues(10.dp),
+                    modifier = Modifier
+                        .height(48.dp),
+                ) {
+                    Icon(
+                        imageVector = if (true /* TODO: 非 NFC */) Icons.Default.Done
+                        else ImageVector.vectorResource(R.drawable.baseline_stop_24),
+                        contentDescription = "Finish / Terminate",
+                        modifier = Modifier.size(28.dp)
+                    )
+                    Text(
+//                            text = "FINISH",
+//                            text = "TERMINATE",
+                        text = "完成",
+                        style = MaterialTheme.typography.titleMedium,
+                        letterSpacing = 2.sp,
+                        modifier = Modifier.padding(horizontal = 10.dp)
+                    )
+                }
+            }
+        }
+    )
+}
+
+@Composable
+private fun TaskPanelBase(
+    taskDetailUiState: TaskDetailUiState,
+    navigateBack: () -> Unit,
+    backgroundColor: Color,
+    foregroundColor: Color,
+    elevationColor: Color,
+    indicatorBackgroundColor: Color = MaterialTheme.colorScheme.secondary,
+    indicatorIconBorderColor: Color = MaterialTheme.colorScheme.tertiary,
+    indicatorIconSurfaceColor: Color = MaterialTheme.colorScheme.surface,
+    indicatorColor: Color = MaterialTheme.colorScheme.onSecondary,
+    indicatorTrackColor: Color = Color(0x40FFFFFF),
+    majorInfoContent: @Composable (ColumnScope.() -> Unit),
+    controllerBarContent: @Composable (RowScope.() -> Unit),
+) {
     Surface(
-        color = stateColor, modifier = Modifier
+        color = backgroundColor, modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
     ) {
         ConstraintLayout {
-            val (majorInfo, minorInfo, controllerBar) = createRefs()
+            val (majorInfo, minorInfo, controllerBar, progressIndicator) = createRefs()
+            val topBarHeight = 100.dp
 
-            Surface(shape = RoundedCornerShape(
-                bottomStart = 32.dp,
-                bottomEnd = 32.dp,
-            ),
+            Surface(
+                shape = RoundedCornerShape(
+                    bottomStart = 32.dp,
+                    bottomEnd = 32.dp,
+                ),
 //                tonalElevation = 2.dp,
-                color = Color(0x2AFFFFFF), modifier = Modifier
+                color = elevationColor,
+                modifier = Modifier
                     .constrainAs(majorInfo) {
                         top.linkTo(parent.top, margin = 0.dp)
                     }
                     .fillMaxWidth()
-                    .fillMaxHeight(fraction = 0.75f)) {
+                    .fillMaxHeight(fraction = 0.75f)
+            ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly,
+                    verticalArrangement = Arrangement.SpaceAround,
                     modifier = Modifier
                         .fillMaxWidth()
                         .fillMaxHeight()
                         .safeDrawingPadding()
+                        .padding(top = topBarHeight)
                 ) {
-                    // TODO: 圆形可点击，控制任务开始暂停
-                    Surface(
-                        color = Color(0x0C000000),
-                        shape = RoundedCornerShape(500.dp),
-                        modifier = Modifier.size(290.dp)
-                    ) {
-                        Column(
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Text(
-                                taskStateText,
-                                style = MaterialTheme.typography.displaySmall,
-                                color = Color.White,
-                            )
-                            if (isRelatedTaskHasProcess) {
-                                Spacer(Modifier.height(15.dp))
-                                Text(
-                                    formattedTime,
-                                    style = MaterialTheme.typography.displayLarge,
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
-                        }
-                    }
+                    majorInfoContent()
+                }
+            }
 
-                    TaskInfo(taskDetailUiState.task)
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier
+                    .constrainAs(progressIndicator) {
+                        top.linkTo(parent.top, margin = 0.dp)
+                    }
+                    .fillMaxWidth()
+//                    .background(color = Color(0x22FFFFFF))
+                    .windowInsetsPadding(WindowInsets.statusBars)
+                    .padding(horizontal = 15.dp)
+                    .height(topBarHeight)
+            ) {
+                IconButton(
+                    onClick = navigateBack,
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = foregroundColor
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.KeyboardArrowDown,
+                        contentDescription = "Back",
+                        modifier = Modifier.size(30.dp)
+                    )
+                }
+
+                // 未来可点击以浮动出扩展卡片
+                TaskProgressIndicator(
+                    task = taskDetailUiState.task,
+                    backgroundColor = indicatorBackgroundColor,
+                    iconBorderColor = indicatorIconBorderColor,
+                    iconSurfaceColor = indicatorIconSurfaceColor,
+                    indicatorColor = indicatorColor,
+                    trackColor = indicatorTrackColor,
+                )
+
+                IconButton(
+                    onClick = { /* do something */ },
+                    colors = IconButtonDefaults.iconButtonColors(
+                        contentColor = foregroundColor
+                    )
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.MoreVert,
+                        contentDescription = "Task options",
+                        modifier = Modifier.size(30.dp)
+                    )
                 }
             }
 
@@ -308,8 +446,9 @@ private fun ContinuousTaskPanel(
                     }
                     .fillMaxWidth()
                     .fillMaxHeight(fraction = 0.25f)
-                    .safeDrawingPadding()) {
-                Text("任务历史总结")
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+            ) {
+                Text("任务历史总结", color = foregroundColor)
             }
 
             Row(horizontalArrangement = Arrangement.Center,
@@ -320,90 +459,69 @@ private fun ContinuousTaskPanel(
                     }
 //                    .background(color = Color(0x10000000))
                     .fillMaxWidth()
-                    .height(60.dp)) {
-                Button(
-                    enabled = taskDetailUiState.task?.isCompleted == false, // TODO: 非 NFC 不可开启 但可暂停
-                    onClick = {
-                        if (!tappedUiState.hasTaskProcess) {
-                            onStartNewTask(taskDetailUiState.task!!)
-                        } else {
-                            if (isRelatedTaskHasProcess) { // 是本任务
-                                if (tappedUiState.runningTaskUiState.isRunning) {
-                                    onPauseTask()
-                                } else {
-                                    onContinueTask()
-                                }
-                            } else {
-                                // TODO: 警告是否终止 / 完成已存在任务并开启本任务
-                            }
-                        }
-                    },
-                    contentPadding = PaddingValues(10.dp),
-                    modifier = if (isRelatedTaskHasProcess) Modifier
-                        .height(48.dp)
-                        .width(48.dp)
-                    else Modifier
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        contentColor = MaterialTheme.colorScheme.onSurface,
-                        containerColor = MaterialTheme.colorScheme.surfaceBright,
-                        disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        disabledContainerColor = MaterialTheme.colorScheme.surfaceDim
-                    ),
+                    .height(60.dp)
+            ) {
+                controllerBarContent()
+            }
+        }
+    }
+}
+
+@Composable
+private fun TaskProgressIndicator(
+    task: Task? = null,
+    backgroundColor: Color = MaterialTheme.colorScheme.secondary,
+    iconBorderColor: Color = MaterialTheme.colorScheme.tertiary,
+    iconSurfaceColor: Color = MaterialTheme.colorScheme.surface,
+    indicatorColor: Color = MaterialTheme.colorScheme.onSecondary,
+    trackColor: Color = Color(0x40FFFFFF),
+) {
+    val progress = if (task?.isCompleted == true) 1f else 0f
+
+    Surface(
+        color = backgroundColor,
+        shape = RoundedCornerShape(500.dp),
+        modifier = Modifier
+            .height(60.dp)
+            .width(200.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(4.dp)
+        ) {
+            Surface(
+                color = iconSurfaceColor,
+                shape = RoundedCornerShape(500.dp),
+                border = BorderStroke(width = 5.dp, color = iconBorderColor),
+                modifier = Modifier.size(52.dp)
+            ) {
+
+            }
+
+            Column(
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+                modifier = Modifier.padding(end = 20.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(
-                        imageVector = if (isRelatedTaskHasProcess && tappedUiState.runningTaskUiState.isRunning) ImageVector.vectorResource(
-                            R.drawable.baseline_pause_24
-                        )
-                        else Icons.Default.PlayArrow,
-                        contentDescription = "Start / Pause / Continue",
-                        modifier = Modifier.size(28.dp)
+                    Text(
+                        "${if (task?.isCompleted == true) 1 else 0}/1",
+                        style = MaterialTheme.typography.bodyMedium
                     )
-                    if (!isRelatedTaskHasProcess) {
-                        Text(
-//                            text = "START",
-                            text = if (taskDetailUiState.task?.isCompleted == true) "已完成" else "开始",
-                            style = MaterialTheme.typography.titleMedium,
-                            letterSpacing = 2.sp,
-                            modifier = Modifier.padding(horizontal = 10.dp)
-                        )
-                    }
+                    Text(
+                        if (task?.isCompleted == true) "全部完成" else "${100 * progress}%",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
-                if (isRelatedTaskHasProcess) {
-                    Spacer(Modifier.width(20.dp))
-                    Button(
-                        enabled = true,
-                        onClick = {
-                            if (true /* TODO: 非 NFC */) {
-                                taskDetailUiState.task?.let { task ->
-                                    val record = finishTaskProcess()
-                                    performTaskOnce(taskDetailUiState.task.id, record)
-                                }
-                            } else {
-                                // TODO: 警告并确认是否终止进行中的持续任务进程
-                                finishTaskProcess()
-                            }
-                        },
-                        contentPadding = PaddingValues(10.dp),
-                        modifier = Modifier
-                            .height(48.dp),
-                    ) {
-                        Icon(
-                            imageVector = if (true /* TODO: 非 NFC */) Icons.Default.Done
-                            else ImageVector.vectorResource(R.drawable.baseline_stop_24),
-                            contentDescription = "Finish / Terminate",
-                            modifier = Modifier.size(28.dp)
-                        )
-                        Text(
-//                            text = "FINISH",
-//                            text = "TERMINATE",
-                            text = "完成",
-                            style = MaterialTheme.typography.titleMedium,
-                            letterSpacing = 2.sp,
-                            modifier = Modifier.padding(horizontal = 10.dp)
-                        )
-                    }
-                }
+
+                LinearProgressIndicator(
+                    color = indicatorColor,
+                    trackColor = trackColor,
+                    progress = { progress }
+                )
             }
         }
     }
@@ -418,11 +536,11 @@ private fun TaskInfo(
         verticalArrangement = Arrangement.spacedBy(20.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text(
-            "累计次数 ${task?.id}    |    累计时间 $0",
-            style = MaterialTheme.typography.titleMedium,
-            color = textColor,
-        )
+//        Text(
+//            "累计次数 ${task?.id}    |    累计时间 $0",
+//            style = MaterialTheme.typography.titleMedium,
+//            color = textColor,
+//        )
         Text(
             task?.taskTitle ?: "ERROR",
             style = MaterialTheme.typography.headlineSmall,
@@ -434,9 +552,18 @@ private fun TaskInfo(
 
 @Preview
 @Composable
+private fun TaskProgressIndicatorPreview() {
+    TappedTheme {
+        TaskProgressIndicator()
+    }
+}
+
+@Preview
+@Composable
 private fun TaskDetailRunningPreview() {
     TappedTheme() {
         TaskDetail(
+            navigateBack = {},
             onStartNewTask = {},
             finishTaskProcess = { null },
             onPauseTask = {},
@@ -457,6 +584,7 @@ private fun TaskDetailRunningPreview() {
 private fun TaskDetailPausedPreview() {
     TappedTheme() {
         TaskDetail(
+            navigateBack = {},
             onStartNewTask = {},
             finishTaskProcess = { null },
             onPauseTask = {},
@@ -477,6 +605,7 @@ private fun TaskDetailPausedPreview() {
 private fun TaskDetailNotActivePreview() {
     TappedTheme() {
         TaskDetail(
+            navigateBack = {},
             onStartNewTask = {},
             finishTaskProcess = { null },
             onPauseTask = {},
