@@ -141,13 +141,18 @@ fun AddTaskComponent(
                                 }
 //                            sleep(5000)
 //                                Toast.makeText(context, "保存成功", Toast.LENGTH_LONG).show()
-                                if (!writeTaskToNfc(taskId)) {
-                                    Toast.makeText(context, "写入错误", Toast.LENGTH_LONG).show()
+                                if (editTaskUiState.taskDetails.inNfcManner()) {
+                                    if (!writeTaskToNfc(taskId)) {
+                                        Toast.makeText(context, "写入错误", Toast.LENGTH_LONG).show()
 
-                                    // TODO: 处理写入识别的情况 如删除已插入的任务
+                                        // TODO: 处理写入识别的情况 如删除已插入的任务
 
-                                    return@launch
+                                        return@launch
+                                    }
+                                } else {
+                                    quitComponent()
                                 }
+
 //                                quitComponent()
                             }
                         },

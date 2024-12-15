@@ -99,4 +99,7 @@ dependencies {
 
     // Serialization
     implementation(libs.kotlinx.serialization.json)
+
+    // To use constraintlayout in compose
+    implementation(libs.androidx.constraintlayout.compose)
 }
