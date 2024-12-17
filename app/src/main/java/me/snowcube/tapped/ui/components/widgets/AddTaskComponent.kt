@@ -1,9 +1,9 @@
 package me.snowcube.tapped.ui.components.widgets
 
 import android.os.Build
-import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -43,6 +43,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -60,8 +61,10 @@ import me.snowcube.tapped.models.EditTaskUiState
 import me.snowcube.tapped.models.NfcWritingState
 import me.snowcube.tapped.models.TaskDetailsUiState
 import me.snowcube.tapped.models.inNfcManner
+import me.snowcube.tapped.ui.components.SnackbarLauncher
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
+import me.snowcube.tapped.ui.theme.shapes
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -74,6 +77,7 @@ fun AddTaskComponent(
     nfcWritingState: NfcWritingState,
     editTaskUiState: EditTaskUiState,
     updateEditTaskUiState: (TaskDetailsUiState) -> Unit,
+    snackbarLauncher: SnackbarLauncher? = null,
 ) {
 
     val coroutineScope = rememberCoroutineScope()
@@ -136,14 +140,13 @@ fun AddTaskComponent(
                             coroutineScope.launch {
                                 val taskId = saveTask()
                                 if (taskId == -1L) {
-                                    Toast.makeText(context, "保存失败", Toast.LENGTH_LONG).show()
+                                    snackbarLauncher?.launch("保存失败")
                                     return@launch
                                 }
 //                            sleep(5000)
-//                                Toast.makeText(context, "保存成功", Toast.LENGTH_LONG).show()
                                 if (editTaskUiState.taskDetails.inNfcManner()) {
                                     if (!writeTaskToNfc(taskId)) {
-                                        Toast.makeText(context, "写入错误", Toast.LENGTH_LONG).show()
+                                        snackbarLauncher?.launch("写入错误")
 
                                         // TODO: 处理写入识别的情况 如删除已插入的任务
 
@@ -232,7 +235,7 @@ fun AddTaskComponent(
                 onCheckedChange = {
                     updateEditTaskUiState(editTaskUiState.taskDetails.copy(isContinuous = it))
                 },
-                modifier
+                modifier = modifier,
             )
 
             // TODO: 支持选择“早于”、“迟于”、“宽限时长”
@@ -283,7 +286,11 @@ fun AddTaskComponent(
                     onClick = { showRepetitionConfig = !showRepetitionConfig },
                     modifier = modifier.height(44.dp)
                 )
-                SettingItemMore(label = "更多设置", onClick = {}, modifier = modifier.height(44.dp))
+                SettingItemMore(
+                    label = "更多设置",
+                    onClick = { snackbarLauncher?.launch("Not implemented") },
+                    modifier = modifier.height(44.dp)
+                )
             }
         }
 //        OperationButton(
@@ -332,6 +339,7 @@ fun AddTaskComponent(
 private fun SettingItemSwitch(
     label: String,
     checked: Boolean,
+    surfaceClickable: Boolean = true,
     onCheckedChange: ((Boolean) -> Unit)?,
     modifier: Modifier = Modifier
 ) {
@@ -340,7 +348,10 @@ private fun SettingItemSwitch(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier
             .fillMaxWidth()
+            .clip(MaterialTheme.shapes.small)
+            .clickable(enabled = surfaceClickable, onClick = { onCheckedChange?.invoke(!checked) })
             .padding(vertical = 0.dp, horizontal = 8.dp)
+
     ) {
         Text(label, style = MaterialTheme.typography.titleMedium)
         Switch(
