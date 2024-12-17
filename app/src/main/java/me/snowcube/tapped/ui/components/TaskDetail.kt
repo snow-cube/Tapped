@@ -2,6 +2,7 @@ package me.snowcube.tapped.ui.components
 
 import android.text.format.DateUtils
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -28,6 +29,8 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -83,6 +86,7 @@ fun TaskDetail(
     ) -> Unit, // 将任务打卡一次
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
+    snackbarLauncher: SnackbarLauncher? = null,
     tappedUiState: TappedUiState,
     viewModel: TaskDetailViewModel = hiltViewModel(),
 ) {
@@ -109,21 +113,24 @@ fun TaskDetail(
         composable<TaskPanel> {
             if (uiState.task?.isContinuous == true) {
                 ContinuousTaskPanel(
-                    tappedUiState,
-                    uiState,
-                    navigateBack,
-                    onStartNewTask,
-                    onPauseTask,
-                    onContinueTask,
-                    finishTaskProcess,
-                    performTaskOnce
+                    tappedUiState = tappedUiState,
+                    taskDetailUiState = uiState,
+                    navigateBack = navigateBack,
+                    snackbarLauncher = snackbarLauncher,
+                    onStartNewTask = onStartNewTask,
+                    onPauseTask = onPauseTask,
+                    onContinueTask = onContinueTask,
+                    finishTaskProcess = finishTaskProcess,
+                    performTaskOnce = performTaskOnce
                 )
 
             } else {
                 NonContinuousTaskPanel(
-                    uiState,
-                    navigateBack,
-                    performTaskOnce)
+                    uiState = uiState,
+                    navigateBack = navigateBack,
+                    snackbarLauncher = snackbarLauncher,
+                    performTaskOnce = performTaskOnce
+                )
             }
         }
         composable<EditTask> { }
@@ -135,11 +142,13 @@ fun TaskDetail(
 private fun NonContinuousTaskPanel(
     uiState: TaskDetailUiState,
     navigateBack: () -> Unit,
+    snackbarLauncher: SnackbarLauncher? = null,
     performTaskOnce: (Long, TaskProcessRecord?) -> Unit
 ) {
     TaskPanelBase(
         taskDetailUiState = uiState,
         navigateBack = navigateBack,
+        snackbarLauncher = snackbarLauncher,
         backgroundColor = MaterialTheme.colorScheme.surface,
         foregroundColor = MaterialTheme.colorScheme.onSurface,
         elevationColor = MaterialTheme.colorScheme.surfaceBright,
@@ -186,6 +195,7 @@ private fun ContinuousTaskPanel(
     tappedUiState: TappedUiState,
     taskDetailUiState: TaskDetailUiState,
     navigateBack: () -> Unit,
+    snackbarLauncher: SnackbarLauncher? = null,
     onStartNewTask: (Task) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
@@ -211,6 +221,7 @@ private fun ContinuousTaskPanel(
     TaskPanelBase(
         taskDetailUiState = taskDetailUiState,
         navigateBack = navigateBack,
+        snackbarLauncher = snackbarLauncher,
         backgroundColor = stateColor,
         foregroundColor = Color.White,
         elevationColor = Color(0x2AFFFFFF),
@@ -341,6 +352,7 @@ private fun ContinuousTaskPanel(
 private fun TaskPanelBase(
     taskDetailUiState: TaskDetailUiState,
     navigateBack: () -> Unit,
+    snackbarLauncher: SnackbarLauncher? = null,
     backgroundColor: Color,
     foregroundColor: Color,
     elevationColor: Color,
@@ -410,11 +422,11 @@ private fun TaskPanelBase(
                     Icon(
                         imageVector = Icons.Default.KeyboardArrowDown,
                         contentDescription = "Back",
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(28.dp)
                     )
                 }
 
-                // 未来可点击以浮动出扩展卡片
+                // 未来可点击以浮动出扩展卡片，应扩展 indicator 本身，但内容可传递 Composable 进去，是否扩展状态由外部保存
                 TaskProgressIndicator(
                     task = taskDetailUiState.task,
                     backgroundColor = indicatorBackgroundColor,
@@ -425,7 +437,7 @@ private fun TaskPanelBase(
                 )
 
                 IconButton(
-                    onClick = { /* do something */ },
+                    onClick = { snackbarLauncher?.launch("Button has not been implemented") },
                     colors = IconButtonDefaults.iconButtonColors(
                         contentColor = foregroundColor
                     )
@@ -433,7 +445,7 @@ private fun TaskPanelBase(
                     Icon(
                         imageVector = Icons.Default.MoreVert,
                         contentDescription = "Task options",
-                        modifier = Modifier.size(30.dp)
+                        modifier = Modifier.size(26.dp)
                     )
                 }
             }
@@ -481,9 +493,13 @@ private fun TaskProgressIndicator(
     Surface(
         color = backgroundColor,
         shape = RoundedCornerShape(500.dp),
+        shadowElevation = 4.dp,
         modifier = Modifier
             .height(60.dp)
             .width(200.dp)
+            .clickable(
+                onClick = {}
+            )
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

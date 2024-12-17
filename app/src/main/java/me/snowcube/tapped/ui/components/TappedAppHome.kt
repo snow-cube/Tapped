@@ -81,6 +81,7 @@ fun TappedAppHome(
     onBottomTaskControllerClick: (taskId: Long) -> Unit,
     tappedUiState: TappedUiState,
     onCloseWritingClick: () -> Unit,
+    snackbarLauncher: SnackbarLauncher? = null,
     viewModel: TappedAppHomeViewModel = hiltViewModel()
 ) {
 
@@ -114,70 +115,75 @@ fun TappedAppHome(
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
-        Scaffold(containerColor = MaterialTheme.colorScheme.surfaceDim,
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.surfaceDim,
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-                TappedAppTopBar(titleText = when (currentDestination?.route) {
-                    in HomeScreen.TaskList.includedRoutes -> "任务"
-                    HomeScreen.Statistics.route -> "统计"
-                    HomeScreen.Profile.route -> "账户"
-                    else -> "未知"
-                }, navigationIcon = {
-                    IconButton(onClick = {
-                        scope.launch {
-                            drawerState.apply {
-                                if (isClosed) open() else close()
-                            }
-                        }
-                    }) {
-                        Icon(
-                            imageVector = Icons.Filled.Menu,
-                            contentDescription = "Localized description"
-                        )
-                    }
-                }, actions = {
-                    if (currentDestination?.route in HomeScreen.TaskList.includedRoutes) {
-                        TextSwitch(
-                            selected = when (currentDestination?.route) {
-                                TaskListEnv.Personal.name -> "个人"
-                                TaskListEnv.Team.name -> "小组"
-                                else -> "个人"
-                            },
-                            btnList = listOf("个人", "小组"),
-                            onSelectedChanged = {
-                                navController.navigate(
-                                    when (it) {
-                                        "个人" -> TaskListEnv.Personal.name
-                                        "小组" -> TaskListEnv.Team.name
-                                        else -> TaskListEnv.Personal.name
-                                    }
-                                ) {
-                                    // Pop up to the start destination of the graph to
-                                    // avoid building up a large stack of destinations
-                                    // on the back stack as users select items
-                                    popUpTo(navController.graph.findStartDestination().id) {
-                                        saveState = true
-                                    }
-                                    // Avoid multiple copies of the same destination when
-                                    // reselecting the same item
-                                    launchSingleTop = true
-                                    // Restore state when reselecting a previously selected item
-                                    restoreState = true
+                TappedAppTopBar(
+                    titleText = when (currentDestination?.route) {
+                        in HomeScreen.TaskList.includedRoutes -> "任务"
+                        HomeScreen.Statistics.route -> "统计"
+                        HomeScreen.Profile.route -> "账户"
+                        else -> "未知"
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            scope.launch {
+                                drawerState.apply {
+                                    if (isClosed) open() else close()
                                 }
-                            },
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Menu,
+                                contentDescription = "Localized description"
+                            )
+                        }
+                    },
+                    actions = {
+                        if (currentDestination?.route in HomeScreen.TaskList.includedRoutes) {
+                            TextSwitch(
+                                selected = when (currentDestination?.route) {
+                                    TaskListEnv.Personal.name -> "个人"
+                                    TaskListEnv.Team.name -> "小组"
+                                    else -> "个人"
+                                },
+                                btnList = listOf("个人", "小组"),
+                                onSelectedChanged = {
+                                    navController.navigate(
+                                        when (it) {
+                                            "个人" -> TaskListEnv.Personal.name
+                                            "小组" -> TaskListEnv.Team.name
+                                            else -> TaskListEnv.Personal.name
+                                        }
+                                    ) {
+                                        // Pop up to the start destination of the graph to
+                                        // avoid building up a large stack of destinations
+                                        // on the back stack as users select items
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        // Avoid multiple copies of the same destination when
+                                        // reselecting the same item
+                                        launchSingleTop = true
+                                        // Restore state when reselecting a previously selected item
+                                        restoreState = true
+                                    }
+                                },
 //                                backgroundColor = MaterialTheme.colorScheme.surfaceBright,
-                            modifier = Modifier
-                                .width(140.dp)
-                                .height(34.dp)
-                        )
-                    }
-                    IconButton(onClick = { /* do something */ }) {
-                        Icon(
-                            imageVector = Icons.Filled.MoreVert,
-                            contentDescription = "Localized description"
-                        )
-                    }
-                }, scrollBehavior = scrollBehavior
+                                modifier = Modifier
+                                    .width(140.dp)
+                                    .height(34.dp)
+                            )
+                        }
+                        IconButton(onClick = { /* do something */ }) {
+                            Icon(
+                                imageVector = Icons.Filled.MoreVert,
+                                contentDescription = "Localized description"
+                            )
+                        }
+                    },
+                    scrollBehavior = scrollBehavior
                 )
             },
             bottomBar = {
@@ -207,7 +213,8 @@ fun TappedAppHome(
                     onContinueTask = onContinueTask,
                     onBottomTaskControllerClick = onBottomTaskControllerClick
                 )
-            }) { innerPadding ->
+            }
+        ) { innerPadding ->
             NavHost(
                 navController,
                 startDestination = HomeScreen.TaskList.route,
@@ -230,38 +237,39 @@ fun TappedAppHome(
                 }
                 composable(HomeScreen.Profile.route) { }
             }
-        }
-    }
 
-    if (showBottomSheet) {
-        ModalBottomSheet(
+            if (showBottomSheet) {
+                ModalBottomSheet(
 //            windowInsets = WindowInsets(0, 0, 0, 0),
-            windowInsets = WindowInsets.statusBars,
-            shape = RoundedCornerShape(
-                topStart = 24.dp,
-                topEnd = 24.dp,
-            ),
-            containerColor = MaterialTheme.colorScheme.surfaceBright,
+                    windowInsets = WindowInsets.statusBars, // Bottom sheet 并不避开底部导航条，而由内容避开
+                    shape = RoundedCornerShape(
+                        topStart = 24.dp,
+                        topEnd = 24.dp,
+                    ),
+                    containerColor = MaterialTheme.colorScheme.surfaceBright,
 //            modifier = Modifier.fillMaxHeight(),
 //            modifier = Modifier.height(600.dp),
-            modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min),
-            sheetState = sheetState,
-            onDismissRequest = { showBottomSheet = false }) {
-            AddTaskComponent(
-                nfcWritingState = tappedUiState.nfcWritingState,
-                quitComponent = {
-                    // TODO: Reset UI states
-                    // 该工作不能在组件内部进行，因为部分组件的应用场景中退出时不应重置 UI State，如修改已有任务
+                    modifier = Modifier.height(intrinsicSize = IntrinsicSize.Min),
+                    sheetState = sheetState,
+                    onDismissRequest = { showBottomSheet = false }) {
+                    AddTaskComponent(
+                        nfcWritingState = tappedUiState.nfcWritingState,
+                        quitComponent = {
+                            // TODO: Reset UI states
+                            // 该工作不能在组件内部进行，因为部分组件的应用场景中退出时不应重置 UI State，如修改已有任务
 
-                    showBottomSheet = false
-                },
-                writeTaskToNfc = writeTaskToNfc,
-                onCloseWritingClick = onCloseWritingClick,
-                editTaskUiState = viewModel.editTaskUiState,
-                updateEditTaskUiState = viewModel::updateEditTaskUiState,
-                saveTask = viewModel::saveTask,
-                modifier = Modifier.safeDrawingPadding()
-            )
+                            showBottomSheet = false
+                        },
+                        writeTaskToNfc = writeTaskToNfc,
+                        onCloseWritingClick = onCloseWritingClick,
+                        editTaskUiState = viewModel.editTaskUiState,
+                        updateEditTaskUiState = viewModel::updateEditTaskUiState,
+                        saveTask = viewModel::saveTask,
+                        snackbarLauncher = snackbarLauncher,
+                        modifier = Modifier.safeDrawingPadding()
+                    )
+                }
+            }
         }
     }
 }
