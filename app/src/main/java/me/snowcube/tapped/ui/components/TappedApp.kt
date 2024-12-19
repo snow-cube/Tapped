@@ -3,6 +3,17 @@ package me.snowcube.tapped.ui.components
 import android.os.Build
 import android.util.Log
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.EaseIn
+import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.shrinkOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
@@ -117,7 +128,30 @@ fun TappedApp(
 
     Box() {
         NavHost(
-            navController = taskAppNavController, startDestination = HomeRoute
+            navController = taskAppNavController,
+            startDestination = HomeRoute,
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(500)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(500)
+                )
+            },
+            exitTransition = {
+                fadeOut(
+                    tween(500)
+                )
+            },
+            popEnterTransition = {
+                fadeIn(
+                    tween(500)
+                )
+            },
         ) {
             composable<HomeRoute> {
                 TappedAppHome(
@@ -155,7 +189,9 @@ fun TappedApp(
         }
 
         SnackbarHost(
-            hostState = snackbarLauncher.snackbarHostState, Modifier.align(Alignment.BottomCenter)
+            hostState = snackbarLauncher.snackbarHostState,
+            Modifier
+                .align(Alignment.BottomCenter)
 //                .safeDrawingPadding()
                 .padding(bottom = 84.dp)
         ) { data ->
@@ -190,7 +226,7 @@ fun TappedApp(
                         data.visuals.message,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(horizontal = 5.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp)
                     )
                 }
             }

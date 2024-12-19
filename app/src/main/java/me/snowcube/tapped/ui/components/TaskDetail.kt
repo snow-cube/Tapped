@@ -1,8 +1,25 @@
 package me.snowcube.tapped.ui.components
 
 import android.text.format.DateUtils
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -39,10 +56,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
@@ -66,6 +87,8 @@ import me.snowcube.tapped.models.TaskDetailViewModel
 import me.snowcube.tapped.models.TaskProcessRecord
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.clip
 
 @Serializable
 object TaskPanel
@@ -145,8 +168,7 @@ private fun NonContinuousTaskPanel(
     snackbarLauncher: SnackbarLauncher? = null,
     performTaskOnce: (Long, TaskProcessRecord?) -> Unit
 ) {
-    TaskPanelBase(
-        taskDetailUiState = uiState,
+    TaskPanelBase(taskDetailUiState = uiState,
         navigateBack = navigateBack,
         snackbarLauncher = snackbarLauncher,
         backgroundColor = MaterialTheme.colorScheme.surface,
@@ -160,16 +182,13 @@ private fun NonContinuousTaskPanel(
                 enabled = uiState.task?.isCompleted == false, // TODO: 任务非 NFC
                 onClick = {
                     uiState.task?.let { task -> performTaskOnce(task.id, null) }
-                },
-                contentPadding = PaddingValues(10.dp),
-                colors = ButtonDefaults.buttonColors(
+                }, contentPadding = PaddingValues(10.dp), colors = ButtonDefaults.buttonColors(
                     contentColor = MaterialTheme.colorScheme.onTertiary,
                     containerColor = MaterialTheme.colorScheme.tertiary,
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     disabledContainerColor = MaterialTheme.colorScheme.surfaceDim
 
-                ),
-                border = BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.secondary)
+                ), border = BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.secondary)
 //                        modifier = Modifier.size(80.dp)
             ) {
                 Icon(
@@ -183,11 +202,12 @@ private fun NonContinuousTaskPanel(
 //                            text = "FINISH",
                     style = MaterialTheme.typography.titleMedium,
                     letterSpacing = 2.sp,
-                    modifier = Modifier.padding(horizontal = 10.dp)
+                    modifier = Modifier
+                        .padding(horizontal = 10.dp)
+                        .animateContentSize()
                 )
             }
-        }
-    )
+        })
 }
 
 @Composable
@@ -214,12 +234,17 @@ private fun ContinuousTaskPanel(
 
 //    val formattedAccumulatedTime = DateUtils.formatElapsedTime(0)
 
-    val stateColor =
-        if (isRelatedTaskHasProcess) if (tappedUiState.runningTaskUiState.isRunning) paletteColor.backgroundGreen else paletteColor.backgroundYellow
-        else paletteColor.backgroundBlue
+    val stateColor by animateColorAsState(
+        targetValue = if (isRelatedTaskHasProcess) if (tappedUiState.runningTaskUiState.isRunning) paletteColor.backgroundGreen else paletteColor.backgroundYellow
+        else paletteColor.backgroundBlue,
+        label = "stateColor"
+    )
 
-    TaskPanelBase(
-        taskDetailUiState = taskDetailUiState,
+//    val stateColor =
+//        if (isRelatedTaskHasProcess) if (tappedUiState.runningTaskUiState.isRunning) paletteColor.backgroundGreen else paletteColor.backgroundYellow
+//        else paletteColor.backgroundBlue
+
+    TaskPanelBase(taskDetailUiState = taskDetailUiState,
         navigateBack = navigateBack,
         snackbarLauncher = snackbarLauncher,
         backgroundColor = stateColor,
@@ -232,11 +257,12 @@ private fun ContinuousTaskPanel(
         indicatorIconSurfaceColor = MaterialTheme.colorScheme.secondary, // TODO: 改为完成状态色
         majorInfoContent = {
             // TODO: 圆形可点击，控制任务开始暂停
-            Surface(
-                color = Color(0x0C000000),
+            Surface(color = Color(0x0C000000),
                 shape = RoundedCornerShape(500.dp),
-                modifier = Modifier.size(290.dp)
-            ) {
+                modifier = Modifier
+                    .size(290.dp)
+                    .clip(RoundedCornerShape(500.dp))
+                    .clickable() {}) {
                 Column(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
@@ -246,13 +272,13 @@ private fun ContinuousTaskPanel(
                         style = MaterialTheme.typography.displaySmall,
                         color = Color.White,
                     )
-                    if (isRelatedTaskHasProcess) {
-                        Spacer(Modifier.height(15.dp))
+                    AnimatedVisibility(isRelatedTaskHasProcess) {
                         Text(
                             formattedTime,
                             style = MaterialTheme.typography.displayLarge,
                             color = Color.White,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(top = 15.dp)
                         )
                     }
                 }
@@ -261,59 +287,44 @@ private fun ContinuousTaskPanel(
             TaskInfo(taskDetailUiState.task)
         },
         controllerBarContent = {
-            Button(
-                enabled = taskDetailUiState.task?.isCompleted == false, // TODO: 非 NFC 不可开启 但可暂停
-                onClick = {
-                    if (!tappedUiState.hasTaskProcess) {
-                        onStartNewTask(taskDetailUiState.task!!)
-                    } else {
-                        if (isRelatedTaskHasProcess) { // 是本任务
+            AnimatedVisibility(isRelatedTaskHasProcess) {
+                Row {
+                    Button(
+                        enabled = isRelatedTaskHasProcess,
+                        onClick = {
                             if (tappedUiState.runningTaskUiState.isRunning) {
                                 onPauseTask()
                             } else {
                                 onContinueTask()
                             }
-                        } else {
-                            // TODO: 警告是否终止 / 完成已存在任务并开启本任务
-                        }
+                        },
+                        contentPadding = PaddingValues(10.dp),
+                        modifier = Modifier.size(48.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurface,
+                            containerColor = MaterialTheme.colorScheme.surfaceBright,
+                            disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                            disabledContainerColor = MaterialTheme.colorScheme.surfaceDim
+                        ),
+                    ) {
+                        Icon(
+                            imageVector = if (tappedUiState.runningTaskUiState.isRunning) ImageVector.vectorResource(
+                                R.drawable.baseline_pause_24
+                            )
+                            else Icons.Default.PlayArrow,
+                            contentDescription = "Pause / Continue",
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
-                },
-                contentPadding = PaddingValues(10.dp),
-                modifier = if (isRelatedTaskHasProcess) Modifier
-                    .height(48.dp)
-                    .width(48.dp)
-                else Modifier
-                    .height(48.dp),
-                colors = ButtonDefaults.buttonColors(
-                    contentColor = MaterialTheme.colorScheme.onSurface,
-                    containerColor = MaterialTheme.colorScheme.surfaceBright,
-                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    disabledContainerColor = MaterialTheme.colorScheme.surfaceDim
-                ),
-            ) {
-                Icon(
-                    imageVector = if (isRelatedTaskHasProcess && tappedUiState.runningTaskUiState.isRunning) ImageVector.vectorResource(
-                        R.drawable.baseline_pause_24
-                    )
-                    else Icons.Default.PlayArrow,
-                    contentDescription = "Start / Pause / Continue",
-                    modifier = Modifier.size(28.dp)
-                )
-                if (!isRelatedTaskHasProcess) {
-                    Text(
-//                            text = "START",
-                        text = if (taskDetailUiState.task?.isCompleted == true) "已完成" else "开始",
-                        style = MaterialTheme.typography.titleMedium,
-                        letterSpacing = 2.sp,
-                        modifier = Modifier.padding(horizontal = 10.dp)
-                    )
+
+                    Spacer(Modifier.width(20.dp))
                 }
             }
-            if (isRelatedTaskHasProcess) {
-                Spacer(Modifier.width(20.dp))
-                Button(
-                    enabled = true,
-                    onClick = {
+
+            Button(
+                enabled = true,
+                onClick = {
+                    if (isRelatedTaskHasProcess) { // 是本任务
                         if (true /* TODO: 非 NFC */) {
                             taskDetailUiState.task?.let { task ->
                                 val record = finishTaskProcess()
@@ -323,29 +334,44 @@ private fun ContinuousTaskPanel(
                             // TODO: 警告并确认是否终止进行中的持续任务进程
                             finishTaskProcess()
                         }
-                    },
-                    contentPadding = PaddingValues(10.dp),
-                    modifier = Modifier
-                        .height(48.dp),
-                ) {
-                    Icon(
-                        imageVector = if (true /* TODO: 非 NFC */) Icons.Default.Done
-                        else ImageVector.vectorResource(R.drawable.baseline_stop_24),
-                        contentDescription = "Finish / Terminate",
-                        modifier = Modifier.size(28.dp)
-                    )
-                    Text(
-//                            text = "FINISH",
-//                            text = "TERMINATE",
-                        text = "完成",
-                        style = MaterialTheme.typography.titleMedium,
-                        letterSpacing = 2.sp,
-                        modifier = Modifier.padding(horizontal = 10.dp)
-                    )
-                }
+                    } else {
+                        if (!tappedUiState.hasTaskProcess) {
+                            onStartNewTask(taskDetailUiState.task!!)
+                        } else {
+                            // TODO: 警告是否终止 / 完成已存在任务并开启本任务
+                        }
+                    }
+
+                },
+                contentPadding = PaddingValues(10.dp),
+                colors = ButtonDefaults.buttonColors(
+                    contentColor = if (isRelatedTaskHasProcess) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                    containerColor = if (isRelatedTaskHasProcess) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceBright,
+                    disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    disabledContainerColor = MaterialTheme.colorScheme.surfaceDim
+                ),
+                modifier = Modifier.height(48.dp),
+            ) {
+                Icon(
+                    imageVector = if (isRelatedTaskHasProcess) {
+                        if (true /* TODO: 非 NFC */) Icons.Default.Done
+                        else ImageVector.vectorResource(R.drawable.baseline_stop_24)
+                    } else Icons.Default.PlayArrow,
+                    contentDescription = "Start/ Finish / Terminate",
+                    modifier = Modifier.size(28.dp)
+                )
+                Text(
+                    text = if (isRelatedTaskHasProcess) {
+                        if (true /* TODO: 非 NFC */) "完成"
+                        else "终止"
+                    } else "开始",
+                    style = MaterialTheme.typography.titleMedium,
+                    letterSpacing = 2.sp,
+                    modifier = Modifier.padding(horizontal = 10.dp)
+                )
             }
-        }
-    )
+
+        })
 }
 
 @Composable
@@ -364,6 +390,22 @@ private fun TaskPanelBase(
     majorInfoContent: @Composable (ColumnScope.() -> Unit),
     controllerBarContent: @Composable (RowScope.() -> Unit),
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+//    var launched by remember {
+//        mutableStateOf(false)
+//    }
+    var visible by remember {
+        mutableStateOf(true)
+    }
+
+    val majorInfoHeightFraction: Float by animateFloatAsState(
+        if (visible) .75f else 1f, label = "majorInfoHeightFraction"
+    )
+
+//    LaunchedEffect(Unit) {
+//        launched = true
+//    }
+
     Surface(
         color = backgroundColor, modifier = Modifier
             .fillMaxWidth()
@@ -373,20 +415,22 @@ private fun TaskPanelBase(
             val (majorInfo, minorInfo, controllerBar, progressIndicator) = createRefs()
             val topBarHeight = 100.dp
 
-            Surface(
-                shape = RoundedCornerShape(
-                    bottomStart = 32.dp,
-                    bottomEnd = 32.dp,
-                ),
+            Surface(shape = RoundedCornerShape(
+                bottomStart = 32.dp,
+                bottomEnd = 32.dp,
+            ),
 //                tonalElevation = 2.dp,
-                color = elevationColor,
-                modifier = Modifier
+                color = elevationColor, modifier = Modifier
                     .constrainAs(majorInfo) {
                         top.linkTo(parent.top, margin = 0.dp)
                     }
                     .fillMaxWidth()
-                    .fillMaxHeight(fraction = 0.75f)
-            ) {
+                    .fillMaxHeight(fraction = majorInfoHeightFraction)
+                    .clickable(
+                        interactionSource = interactionSource, indication = null
+                    ) {
+                        visible = !visible
+                    }) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.SpaceAround,
@@ -400,53 +444,62 @@ private fun TaskPanelBase(
                 }
             }
 
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier
-                    .constrainAs(progressIndicator) {
-                        top.linkTo(parent.top, margin = 0.dp)
-                    }
-                    .fillMaxWidth()
-//                    .background(color = Color(0x22FFFFFF))
-                    .windowInsetsPadding(WindowInsets.statusBars)
-                    .padding(horizontal = 15.dp)
-                    .height(topBarHeight)
+            AnimatedVisibility(
+//                launched &&
+                visible,
+                enter = slideInVertically(animationSpec = spring(
+//                    stiffness = Spring.StiffnessLow
+                ), initialOffsetY = { -it }) + fadeIn(initialAlpha = 0f),
+                exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut()
             ) {
-                IconButton(
-                    onClick = navigateBack,
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = foregroundColor
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.KeyboardArrowDown,
-                        contentDescription = "Back",
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+                Row(verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier
+                        .constrainAs(progressIndicator) {
+                            top.linkTo(parent.top, margin = 0.dp)
+                        }
+                        .fillMaxWidth()
+//                    .background(color = Color(0x22FFFFFF))
+                        .windowInsetsPadding(WindowInsets.statusBars)
+                        .padding(horizontal = 15.dp)
+                        .height(topBarHeight)) {
+                    IconButton(
+                        onClick = navigateBack, colors = IconButtonDefaults.iconButtonColors(
+                            contentColor = foregroundColor
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.KeyboardArrowDown,
+                            contentDescription = "Back",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
 
-                // 未来可点击以浮动出扩展卡片，应扩展 indicator 本身，但内容可传递 Composable 进去，是否扩展状态由外部保存
-                TaskProgressIndicator(
-                    task = taskDetailUiState.task,
-                    backgroundColor = indicatorBackgroundColor,
-                    iconBorderColor = indicatorIconBorderColor,
-                    iconSurfaceColor = indicatorIconSurfaceColor,
-                    indicatorColor = indicatorColor,
-                    trackColor = indicatorTrackColor,
-                )
+                    // 未来可点击以浮动出扩展卡片，应扩展 indicator 本身，但内容可传递 Composable 进去，是否扩展状态由外部保存
+                    TaskProgressIndicator(
+                        task = taskDetailUiState.task,
+                        backgroundColor = indicatorBackgroundColor,
+                        iconBorderColor = indicatorIconBorderColor,
+                        iconSurfaceColor = indicatorIconSurfaceColor,
+                        indicatorColor = indicatorColor,
+                        trackColor = indicatorTrackColor,
+                    )
 
-                IconButton(
-                    onClick = { snackbarLauncher?.launch("Button has not been implemented") },
-                    colors = IconButtonDefaults.iconButtonColors(
-                        contentColor = foregroundColor
-                    )
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.MoreVert,
-                        contentDescription = "Task options",
-                        modifier = Modifier.size(26.dp)
-                    )
+                    IconButton(
+                        onClick = {
+                            snackbarLauncher?.launch(
+                                "更多按钮尚未实现", actionLabel = "好的", withDismissAction = true
+                            )
+                        }, colors = IconButtonDefaults.iconButtonColors(
+                            contentColor = foregroundColor
+                        )
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.MoreVert,
+                            contentDescription = "Task options",
+                            modifier = Modifier.size(26.dp)
+                        )
+                    }
                 }
             }
 
@@ -458,22 +511,37 @@ private fun TaskPanelBase(
                     }
                     .fillMaxWidth()
                     .fillMaxHeight(fraction = 0.25f)
-                    .windowInsetsPadding(WindowInsets.navigationBars)
-            ) {
-                Text("任务历史总结", color = foregroundColor)
+                    .windowInsetsPadding(WindowInsets.navigationBars)) {
+                AnimatedVisibility(
+                    visible, enter = fadeIn(
+                        animationSpec = spring(
+                            stiffness = Spring.StiffnessVeryLow
+                        ), initialAlpha = 0f
+                    ), exit = fadeOut()
+                ) {
+                    Text("任务历史总结", color = foregroundColor)
+                }
             }
-
-            Row(horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .constrainAs(controllerBar) {
-                        top.linkTo(majorInfo.bottom, margin = (-30).dp)
-                    }
+            AnimatedVisibility(visible, enter = fadeIn(
+                animationSpec = spring(
+                    stiffness = Spring.StiffnessVeryLow
+                ), initialAlpha = 0f
+            ), exit = fadeOut(), modifier = Modifier.constrainAs(controllerBar) {
+                top.linkTo(majorInfo.bottom, margin = (-30).dp)
+            }) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+//                    .constrainAs(controllerBar) {
+//                        top.linkTo(majorInfo.bottom, margin = (-30).dp)
+//                    }
 //                    .background(color = Color(0x10000000))
-                    .fillMaxWidth()
-                    .height(60.dp)
-            ) {
-                controllerBarContent()
+                        .fillMaxWidth()
+                        .height(60.dp)
+                ) {
+                    controllerBarContent()
+                }
             }
         }
     }
@@ -487,6 +555,7 @@ private fun TaskProgressIndicator(
     iconSurfaceColor: Color = MaterialTheme.colorScheme.surface,
     indicatorColor: Color = MaterialTheme.colorScheme.onSecondary,
     trackColor: Color = Color(0x40FFFFFF),
+    modifier: Modifier = Modifier
 ) {
     val progress = if (task?.isCompleted == true) 1f else 0f
 
@@ -494,34 +563,32 @@ private fun TaskProgressIndicator(
         color = backgroundColor,
         shape = RoundedCornerShape(500.dp),
         shadowElevation = 4.dp,
-        modifier = Modifier
+        modifier = modifier
             .height(60.dp)
             .width(200.dp)
-            .clickable(
-                onClick = {}
-            )
+            .clickable(onClick = {})
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = Modifier.padding(4.dp)
+            modifier = modifier.padding(4.dp)
         ) {
             Surface(
                 color = iconSurfaceColor,
                 shape = RoundedCornerShape(500.dp),
                 border = BorderStroke(width = 5.dp, color = iconBorderColor),
-                modifier = Modifier.size(52.dp)
+                modifier = modifier.size(52.dp)
             ) {
 
             }
 
             Column(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.padding(end = 20.dp)
+                modifier = modifier.padding(end = 20.dp)
             ) {
                 Row(
                     horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = modifier.fillMaxWidth()
                 ) {
                     Text(
                         "${if (task?.isCompleted == true) 1 else 0}/1",
@@ -533,11 +600,9 @@ private fun TaskProgressIndicator(
                     )
                 }
 
-                LinearProgressIndicator(
-                    color = indicatorColor,
+                LinearProgressIndicator(color = indicatorColor,
                     trackColor = trackColor,
-                    progress = { progress }
-                )
+                    progress = { progress })
             }
         }
     }
@@ -545,8 +610,7 @@ private fun TaskProgressIndicator(
 
 @Composable
 private fun TaskInfo(
-    task: Task?,
-    textColor: Color = Color.White
+    task: Task?, textColor: Color = Color.White
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(20.dp),

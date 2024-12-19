@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -49,15 +48,18 @@ import me.snowcube.tapped.R
 import me.snowcube.tapped.models.RunningTaskUiState
 import me.snowcube.tapped.models.TappedUiState
 import me.snowcube.tapped.models.TaskProcessRecord
-import me.snowcube.tapped.ui.components.HomeScreen
+import me.snowcube.tapped.ui.components.HomeBottomNavigationItem
+import me.snowcube.tapped.ui.components.HomePage
+import me.snowcube.tapped.ui.components.homeBottomNavigationItems
+import me.snowcube.tapped.ui.components.homePages
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
 
 @Composable
 fun BottomBar(
-    screenItems: List<HomeScreen>,
-    currentScreenRoute: String,
-    onItemClick: (targetRoute: String) -> Unit,
+    navigationItems: List<HomeBottomNavigationItem>,
+    currentPage: HomePage,
+    onItemClick: (clickedItem: HomeBottomNavigationItem) -> Unit,
     modifier: Modifier = Modifier,
     onAddTaskBtnClick: () -> Unit,
     tappedUiState: TappedUiState,
@@ -119,13 +121,13 @@ fun BottomBar(
                         shape = MaterialTheme.shapes.extraLarge
                     )
                 ) {
-                    screenItems.forEach { screen ->
+                    navigationItems.forEach { item ->
                         NavBtn(
-                            text = stringResource(screen.resourceId),
-                            icon = screen.icon,
-                            selected = currentScreenRoute == screen.route || currentScreenRoute in screen.includedRoutes
+                            text = stringResource(item.resourceId),
+                            icon = item.icon,
+                            selected = currentPage in item.includedPages
                         ) {
-                            onItemClick(screen.route)
+                            onItemClick(item)
                         }
                     }
                 }
@@ -301,10 +303,8 @@ private fun NavBtn(
 fun BottomNavigationBarPreview() {
     TappedTheme() {
         BottomBar(
-            screenItems = listOf(
-                HomeScreen.TaskList, HomeScreen.Statistics, HomeScreen.Profile
-            ),
-            currentScreenRoute = "statistics",
+            navigationItems = homeBottomNavigationItems,
+            currentPage = homePages[0],
             onItemClick = {},
             onAddTaskBtnClick = {},
             finishTaskProcess = { null },
