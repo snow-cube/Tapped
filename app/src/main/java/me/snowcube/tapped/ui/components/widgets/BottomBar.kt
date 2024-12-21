@@ -1,9 +1,22 @@
 package me.snowcube.tapped.ui.components.widgets
 
 import android.text.format.DateUtils
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateIntOffsetAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -12,6 +25,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -32,16 +46,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import me.snowcube.tapped.R
@@ -54,6 +74,8 @@ import me.snowcube.tapped.ui.components.homeBottomNavigationItems
 import me.snowcube.tapped.ui.components.homePages
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
+import me.snowcube.tapped.ui.utils.DisposableEffectWithLifecycle
+import kotlin.math.roundToInt
 
 @Composable
 fun BottomBar(
@@ -72,6 +94,11 @@ fun BottomBar(
     onBottomTaskControllerClick: (taskId: Long) -> Unit,
 
     ) {
+
+    var resumed by remember { mutableStateOf(false) }
+
+    DisposableEffectWithLifecycle(onResume = { resumed = true })
+
     Column(
         verticalArrangement = Arrangement.spacedBy(7.dp), modifier = modifier
 //            .background(color = MaterialTheme.colorScheme.surface)
@@ -80,7 +107,21 @@ fun BottomBar(
             )
             .windowInsetsPadding(WindowInsets.navigationBars)
     ) {
-        if (tappedUiState.hasTaskProcess) {
+        AnimatedVisibility(
+            resumed && tappedUiState.hasTaskProcess,
+            enter = slideInVertically(
+                initialOffsetY = { it }, animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            ) + expandVertically(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioMediumBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            ) + fadeIn(),
+            exit = slideOutVertically(targetOffsetY = { it }) + shrinkVertically() + fadeOut()
+        ) {
             BottomTaskController(modifier = modifier,
                 runningTaskUiState = tappedUiState.runningTaskUiState,
                 finishTaskProcess = finishTaskProcess,
@@ -108,25 +149,57 @@ fun BottomBar(
                         shape = MaterialTheme.shapes.extraLarge
                     )
                     .height(56.dp)
-//                    .width(214.dp)
                     .width(230.dp)
                     .padding(4.dp)
                     .align(Alignment.CenterVertically)
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    modifier = modifier.background(
-                        color = MaterialTheme.colorScheme.primary,
-                        shape = MaterialTheme.shapes.extraLarge
+                Box() {
+                    // 前面每存在一个未选中 button 的偏移量， 包括 48.dp width 和 8.dp spacing
+                    val unselectedPxToOffset = with(LocalDensity.current) {
+                        56.dp.toPx().roundToInt()
+                    }
+
+                    // 选中 button 需要额外的偏移量 (110 - 48 = 62).dp
+                    val selectedPxToOffsetExtra = with(LocalDensity.current) {
+                        62.dp.toPx().roundToInt()
+                    }
+
+                    // 寻找被选中 button 下标
+                    var selectedIndex = 0
+                    navigationItems.forEachIndexed { index, item ->
+                        if (currentPage in item.includedPages) selectedIndex = index
+                    }
+
+                    val highlightOffset by animateIntOffsetAsState(
+                        targetValue = IntOffset(
+                            unselectedPxToOffset * selectedIndex,
+                            0
+                        ), label = "highlight offset"
                     )
-                ) {
-                    navigationItems.forEach { item ->
-                        NavBtn(
-                            text = stringResource(item.resourceId),
+
+                    Box(
+                        modifier = Modifier
+                            .offset { highlightOffset }
+                            .width(110.dp)
+                            .fillMaxHeight()
+                            .background(
+                                MaterialTheme.colorScheme.onPrimary,
+                                shape = MaterialTheme.shapes.extraLarge
+                            )
+                    )
+
+                    navigationItems.forEachIndexed { index, item ->
+                        val offset by animateIntOffsetAsState(
+                            targetValue = IntOffset(
+                                unselectedPxToOffset * index + if (selectedIndex < index) selectedPxToOffsetExtra else 0,
+                                0
+                            ), label = "button offset"
+                        )
+
+                        NavBtn(text = stringResource(item.resourceId),
                             icon = item.icon,
-                            selected = currentPage in item.includedPages
-                        ) {
+                            selected = currentPage in item.includedPages,
+                            modifier = Modifier.offset { offset }) {
                             onItemClick(item)
                         }
                     }
@@ -262,40 +335,41 @@ private fun NavBtn(
     onClick: () -> Unit
 ) {
     Button(
-        contentPadding = PaddingValues(7.dp),
+        contentPadding = PaddingValues(11.dp),
         onClick = onClick,
         shape = MaterialTheme.shapes.extraLarge,
         colors = ButtonColors(
-            containerColor = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.primary,
+            containerColor = Color.Transparent,
             contentColor = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onPrimary,
             disabledContainerColor = MaterialTheme.colorScheme.primary,
             disabledContentColor = MaterialTheme.colorScheme.onPrimary
         ),
         modifier = modifier
             .fillMaxHeight()
-            .width(if (selected) 110.dp else 48.dp)
+            .width(if (selected) 110.dp else 48.dp) // 48 = 26 + 11 * 2
     ) {
         Icon(
             imageVector = icon,
             contentDescription = null,
-            modifier = modifier
-                .size(27.dp)
+            modifier = Modifier
+                .size(26.dp)
                 .align(Alignment.CenterVertically)
         )
-        if (selected) {
-//            Spacer(modifier.width(7.dp))
+
+        AnimatedVisibility(
+            selected,
+            enter = slideInHorizontally() + fadeIn(), exit = slideOutHorizontally() + fadeOut()
+        ) {
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodyLarge,
                 fontWeight = FontWeight.Bold,
                 letterSpacing = 3.sp,
                 textAlign = TextAlign.Center,
-                modifier = Modifier.width(62.dp) // 58 = 110 (width of nav button) - 52 (height of nav button)
+                modifier = Modifier.width(62.dp) // 62 = 110 (width of nav button) - 48 (height of nav button)
             )
         }
-
     }
-
 }
 
 @Preview

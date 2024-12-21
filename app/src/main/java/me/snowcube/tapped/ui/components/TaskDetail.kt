@@ -8,16 +8,11 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
-import androidx.compose.animation.core.tween
-import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkVertically
-import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +24,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -38,6 +34,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
@@ -46,8 +44,6 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
@@ -60,8 +56,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -73,10 +72,6 @@ import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
 import kotlinx.serialization.Serializable
 import me.snowcube.tapped.R
 import me.snowcube.tapped.data.source.local.Task
@@ -87,8 +82,43 @@ import me.snowcube.tapped.models.TaskDetailViewModel
 import me.snowcube.tapped.models.TaskProcessRecord
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.draw.clip
+import me.snowcube.tapped.ui.utils.DisposableEffectWithLifecycle
+
+/**
+ * Display an initial empty state or swipe to refresh content.
+ *
+ * @param loading (state) when true, display a loading spinner over [content]
+ * @param empty (state) when true, display [emptyContent]
+ * @param emptyContent (slot) the content to display for the empty state
+ * @param onRefresh (event) event to request refresh
+ * @param modifier the modifier to apply to this layout.
+ * @param content (slot) the main content to show
+ */
+@Composable
+fun LoadingContent(
+    loading: Boolean,
+    empty: Boolean,
+    emptyContent: @Composable () -> Unit,
+//    onRefresh: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    if (empty) {
+        emptyContent()
+    } else {
+//        SwipeRefresh(
+//            state = rememberSwipeRefreshState(loading),
+//            onRefresh = onRefresh,
+//            modifier = modifier,
+//            content = content,
+//        )
+        if (loading) {
+            Text("Loading", Modifier.fillMaxSize())
+        } else {
+            content()
+        }
+    }
+}
 
 @Serializable
 object TaskPanel
@@ -98,6 +128,8 @@ object EditTask
 
 @Serializable
 object TaskStatistics
+
+val taskDetailPages = listOf(EditTask, TaskPanel, TaskStatistics)
 
 @Composable
 fun TaskDetail(
@@ -113,6 +145,12 @@ fun TaskDetail(
     tappedUiState: TappedUiState,
     viewModel: TaskDetailViewModel = hiltViewModel(),
 ) {
+    var resumed by remember { mutableStateOf(false) }
+
+    DisposableEffectWithLifecycle(
+        onResume = { resumed = true }
+    )
+
     // TaskDetail 的编辑任务 UI State 应和新建任务的分开，互不干扰
 
     // 须通过 Service 返回的状态控制按钮的 enable 状态
@@ -125,39 +163,60 @@ fun TaskDetail(
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    val navController = rememberNavController()
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
+    val taskDetailPagerState = rememberPagerState(
+        pageCount = { taskDetailPages.size },
+        initialPage = 1
+    )
 
-    NavHost(
-        navController,
-        startDestination = TaskPanel,
+    val coroutineScope = rememberCoroutineScope()
+
+    LoadingContent(
+        loading = !resumed || uiState.isLoading,
+        empty = uiState.task == null && !uiState.isLoading,
+        emptyContent = {
+            Text(
+                text = "Empty",
+                modifier = Modifier
+            )
+        },
     ) {
-        composable<TaskPanel> {
-            if (uiState.task?.isContinuous == true) {
-                ContinuousTaskPanel(
-                    tappedUiState = tappedUiState,
-                    taskDetailUiState = uiState,
-                    navigateBack = navigateBack,
-                    snackbarLauncher = snackbarLauncher,
-                    onStartNewTask = onStartNewTask,
-                    onPauseTask = onPauseTask,
-                    onContinueTask = onContinueTask,
-                    finishTaskProcess = finishTaskProcess,
-                    performTaskOnce = performTaskOnce
-                )
+        HorizontalPager(
+            state = taskDetailPagerState,
+        ) { pageIndex ->
+            when (taskDetailPages[pageIndex]) {
+                EditTask -> {
+                    Text("EditTask", Modifier.fillMaxSize())
+                }
 
-            } else {
-                NonContinuousTaskPanel(
-                    uiState = uiState,
-                    navigateBack = navigateBack,
-                    snackbarLauncher = snackbarLauncher,
-                    performTaskOnce = performTaskOnce
-                )
+                TaskPanel -> {
+                    if (uiState.task?.isContinuous == true) {
+                        ContinuousTaskPanel(
+                            tappedUiState = tappedUiState,
+                            taskDetailUiState = uiState,
+                            navigateBack = navigateBack,
+                            snackbarLauncher = snackbarLauncher,
+                            onStartNewTask = onStartNewTask,
+                            onPauseTask = onPauseTask,
+                            onContinueTask = onContinueTask,
+                            finishTaskProcess = finishTaskProcess,
+                            performTaskOnce = performTaskOnce
+                        )
+
+                    } else {
+                        NonContinuousTaskPanel(
+                            uiState = uiState,
+                            navigateBack = navigateBack,
+                            snackbarLauncher = snackbarLauncher,
+                            performTaskOnce = performTaskOnce
+                        )
+                    }
+                }
+
+                TaskStatistics -> {
+                    Text("TaskStatistics", Modifier.fillMaxSize())
+                }
             }
         }
-        composable<EditTask> { }
-        composable<TaskStatistics> {}
     }
 }
 
@@ -182,13 +241,16 @@ private fun NonContinuousTaskPanel(
                 enabled = uiState.task?.isCompleted == false, // TODO: 任务非 NFC
                 onClick = {
                     uiState.task?.let { task -> performTaskOnce(task.id, null) }
-                }, contentPadding = PaddingValues(10.dp), colors = ButtonDefaults.buttonColors(
+                },
+                contentPadding = PaddingValues(10.dp),
+                colors = ButtonDefaults.buttonColors(
                     contentColor = MaterialTheme.colorScheme.onTertiary,
                     containerColor = MaterialTheme.colorScheme.tertiary,
                     disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant,
                     disabledContainerColor = MaterialTheme.colorScheme.surfaceDim
 
-                ), border = BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.secondary)
+                ),
+                border = BorderStroke(width = 2.dp, color = MaterialTheme.colorScheme.secondary)
 //                        modifier = Modifier.size(80.dp)
             ) {
                 Icon(
@@ -395,21 +457,29 @@ private fun TaskPanelBase(
 //        mutableStateOf(false)
 //    }
     var visible by remember {
-        mutableStateOf(true)
+        mutableStateOf(false)
     }
 
     val majorInfoHeightFraction: Float by animateFloatAsState(
-        if (visible) .75f else 1f, label = "majorInfoHeightFraction"
+        if (visible) .75f else 1f,
+        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        label = "majorInfoHeightFraction"
     )
 
-//    LaunchedEffect(Unit) {
-//        launched = true
-//    }
+    val alphaAnimation = remember { Animatable(0f) }
+
+    LaunchedEffect(Unit) {
+        alphaAnimation.animateTo(1f)
+        visible = true
+    }
 
     Surface(
         color = backgroundColor, modifier = Modifier
             .fillMaxWidth()
             .fillMaxHeight()
+            .graphicsLayer {
+                alpha = alphaAnimation.value
+            }
     ) {
         ConstraintLayout {
             val (majorInfo, minorInfo, controllerBar, progressIndicator) = createRefs()
@@ -448,7 +518,7 @@ private fun TaskPanelBase(
 //                launched &&
                 visible,
                 enter = slideInVertically(animationSpec = spring(
-//                    stiffness = Spring.StiffnessLow
+                    stiffness = Spring.StiffnessLow
                 ), initialOffsetY = { -it }) + fadeIn(initialAlpha = 0f),
                 exit = slideOutVertically(targetOffsetY = { -it }) + fadeOut()
             ) {
@@ -488,7 +558,9 @@ private fun TaskPanelBase(
                     IconButton(
                         onClick = {
                             snackbarLauncher?.launch(
-                                "更多按钮尚未实现", actionLabel = "好的", withDismissAction = true
+                                "更多按钮尚未实现",
+                                actionLabel = "好的",
+                                withDismissAction = true
                             )
                         }, colors = IconButtonDefaults.iconButtonColors(
                             contentColor = foregroundColor
