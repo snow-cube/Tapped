@@ -2,6 +2,7 @@ package me.snowcube.tapped.ui.components.widgets
 
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -165,12 +166,14 @@ fun AddTaskComponent(
                         Text(
                             if (editTaskUiState.taskDetails.inNfcManner()) "保存并写入" else "保存",
                             style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.animateContentSize()
                         )
                         Spacer(modifier = modifier.width(5.dp))
                         Icon(
                             imageVector = Icons.Default.Done,
-                            contentDescription = "Finish task adding page"
+                            contentDescription = "Finish task adding page",
+                            modifier = Modifier.size(24.dp)
                         )
                     }
                 }

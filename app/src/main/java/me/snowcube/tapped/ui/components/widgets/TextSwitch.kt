@@ -1,10 +1,11 @@
 package me.snowcube.tapped.ui.components.widgets
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,14 +13,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -40,25 +39,49 @@ fun TextSwitch(
         color = backgroundColor,
         shape = if (roundedCorner) RoundedCornerShape(100.dp) else RoundedCornerShape(12.dp),
         modifier = modifier
-            .background(color = backgroundColor, shape = if (roundedCorner) RoundedCornerShape(100.dp) else RoundedCornerShape(14.dp))
+            .background(
+                color = backgroundColor,
+                shape = if (roundedCorner) RoundedCornerShape(100.dp) else RoundedCornerShape(14.dp)
+            )
             .height(36.dp)
             .padding(2.dp)
     ) {
-        Row {
-            btnList.forEach() { btnName ->
-                TextSwitchBtn(
-                    selected = selected == btnName,
-                    text = btnName,
+        Box() {
+
+            var firstSelected = selected == btnList[0]
+            val spacerWidthFraction: Float by animateFloatAsState(
+                if (firstSelected) 0f else 0.5f,
+                label = "spacerWidthFraction"
+            )
+
+            Row {
+                Spacer(modifier = Modifier.fillMaxWidth(spacerWidthFraction))
+                Surface(
                     color = color,
-                    onClick = {
-                        onSelectedChanged(btnName)
-                    },
-                    roundedCorner = roundedCorner,
-                    modifier = modifier
-                        .weight(1f)
+                    shape = if (roundedCorner) RoundedCornerShape(100.dp) else RoundedCornerShape(12.dp),
+                    modifier = Modifier
                         .fillMaxWidth()
                         .fillMaxHeight()
-                )
+                        .weight(1f)
+                ) { }
+                Spacer(modifier = Modifier.fillMaxWidth(0.5f - spacerWidthFraction))
+            }
+
+            Row {
+                btnList.forEach() { btnName ->
+                    TextSwitchBtn(
+                        selected = selected == btnName,
+                        text = btnName,
+                        onClick = {
+                            onSelectedChanged(btnName)
+                        },
+                        roundedCorner = roundedCorner,
+                        modifier = modifier
+                            .weight(1f)
+                            .fillMaxWidth()
+                            .fillMaxHeight()
+                    )
+                }
             }
         }
     }
@@ -70,13 +93,12 @@ private fun TextSwitchBtn(
     text: String,
     onClick: () -> Unit,
     modifier: Modifier,
-    color: Color,
     roundedCorner: Boolean
 ) {
     Button(
         onClick = onClick,
         colors = ButtonColors(
-            containerColor = if (selected) color else Color.Transparent,
+            containerColor = Color.Transparent,
             contentColor = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
             disabledContainerColor = Color.Red,
             disabledContentColor = Color.White
@@ -109,7 +131,7 @@ private fun TextSwitchPreview() {
 private fun TextSwitchRoundedCornerPreview() {
     TappedTheme() {
         TextSwitch(
-            selected = "Option 1",
+            selected = "Option 2",
             btnList = listOf(
                 "Option 1",
                 "Option 2"

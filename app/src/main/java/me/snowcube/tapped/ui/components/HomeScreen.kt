@@ -8,33 +8,43 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.ui.graphics.vector.ImageVector
 import me.snowcube.tapped.R
 
-sealed class HomeScreen(
-    val route: String,
+sealed class HomeBottomNavigationItem(
     @StringRes val resourceId: Int,
     val icon: ImageVector,
-    val includedRoutes: List<String>
+    val includedPages: List<HomePage>
 ) {
-    data object TaskList : HomeScreen(
-        "task_list",
+    data object TaskList : HomeBottomNavigationItem(
         R.string.bottom_task_list,
         Icons.Filled.CheckCircle,
-        includedRoutes = listOf(TaskListEnv.Personal.name, TaskListEnv.Team.name)
+        listOf(HomePage.TaskListPersonal, HomePage.TaskListTeam)
     )
-    data object Statistics : HomeScreen(
-        "statistics",
+
+    data object Statistics : HomeBottomNavigationItem(
         R.string.bottom_statistics,
         Icons.Filled.DateRange,
-        includedRoutes = listOf()
+        listOf(HomePage.StatisticsPage)
     )
-    data object Profile : HomeScreen(
-        "profile",
+
+    data object Profile : HomeBottomNavigationItem(
         R.string.bottom_profile,
         Icons.Filled.AccountCircle,
-        includedRoutes = listOf()
+        listOf(HomePage.ProfilePage)
     )
 }
 
-enum class TaskListEnv() {
-    Personal,
-    Team
+val homeBottomNavigationItems = listOf(
+    HomeBottomNavigationItem.TaskList,
+    HomeBottomNavigationItem.Statistics,
+    HomeBottomNavigationItem.Profile
+)
+
+sealed class HomePage() {
+    data object TaskListPersonal : HomePage()
+    data object TaskListTeam : HomePage()
+    data object StatisticsPage : HomePage()
+    data object ProfilePage : HomePage()
 }
+
+val homePages = listOf(
+    HomePage.TaskListPersonal, HomePage.TaskListTeam, HomePage.StatisticsPage, HomePage.ProfilePage
+)

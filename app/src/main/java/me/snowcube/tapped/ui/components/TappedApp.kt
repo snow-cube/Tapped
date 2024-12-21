@@ -1,18 +1,13 @@
 package me.snowcube.tapped.ui.components
 
 import android.os.Build
-import android.util.Log
 import androidx.annotation.RequiresApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.IntrinsicSize
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material3.ButtonDefaults
@@ -31,14 +26,11 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Popup
-import androidx.compose.ui.zIndex
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.toRoute
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
@@ -117,7 +109,30 @@ fun TappedApp(
 
     Box() {
         NavHost(
-            navController = taskAppNavController, startDestination = HomeRoute
+            navController = taskAppNavController,
+            startDestination = HomeRoute,
+            enterTransition = {
+                slideIntoContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Up,
+                    animationSpec = tween(500)
+                )
+            },
+            popExitTransition = {
+                slideOutOfContainer(
+                    AnimatedContentTransitionScope.SlideDirection.Down,
+                    animationSpec = tween(500)
+                )
+            },
+            exitTransition = {
+                fadeOut(
+                    tween(500)
+                )
+            },
+            popEnterTransition = {
+                fadeIn(
+                    tween(500)
+                )
+            },
         ) {
             composable<HomeRoute> {
                 TappedAppHome(
@@ -155,7 +170,9 @@ fun TappedApp(
         }
 
         SnackbarHost(
-            hostState = snackbarLauncher.snackbarHostState, Modifier.align(Alignment.BottomCenter)
+            hostState = snackbarLauncher.snackbarHostState,
+            Modifier
+                .align(Alignment.BottomCenter)
 //                .safeDrawingPadding()
                 .padding(bottom = 84.dp)
         ) { data ->
@@ -190,7 +207,7 @@ fun TappedApp(
                         data.visuals.message,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(horizontal = 5.dp)
+                        modifier = Modifier.padding(horizontal = 10.dp)
                     )
                 }
             }
