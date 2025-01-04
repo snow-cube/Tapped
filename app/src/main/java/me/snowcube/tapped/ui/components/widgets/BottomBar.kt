@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -273,11 +274,19 @@ private fun BottomTaskController(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 HorizontalDivider()
-                Row {
+                Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        "$taskStateText | $formattedTime",
+                        "$taskStateText | ",
                         color = stateColor,
                         style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 45.sp
+                    )
+                    Text(
+                        formattedTime,
+                        color = stateColor,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontFamily = FontFamily.Monospace,
                         fontWeight = FontWeight.Bold,
                         lineHeight = 45.sp
                     )

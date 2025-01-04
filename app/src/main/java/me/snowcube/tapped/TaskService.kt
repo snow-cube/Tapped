@@ -70,8 +70,7 @@ class TaskService : Service() {
                 PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
             val notification = NotificationCompat.Builder(this, "CHANNEL_ID")
-                .setSmallIcon(R.drawable.ic_launcher_foreground)
-                .setContentTitle("打卡任务")
+                .setSmallIcon(R.drawable.ic_launcher_foreground).setContentTitle("打卡任务")
                 .setContentText("Task content text")
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 // Set the intent that fires when the user taps the notification.
@@ -99,11 +98,8 @@ class TaskService : Service() {
 //                notify(100, notification)
 //            }
 
-            ServiceCompat.startForeground(
-                /* service = */ this,
-                /* id = */ 100, // Cannot be 0
-                /* notification = */ notification,
-                /* foregroundServiceType = */
+            ServiceCompat.startForeground(/* service = */ this,/* id = */ 100, // Cannot be 0
+                /* notification = */ notification,/* foregroundServiceType = */
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                     ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
                 } else {
@@ -113,9 +109,7 @@ class TaskService : Service() {
         } catch (
             e: Exception
         ) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-                && e is ForegroundServiceStartNotAllowedException
-            ) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && e is ForegroundServiceStartNotAllowedException) {
                 // App not in a valid state to start foreground service
                 // (e.g. started from bg)
             }
@@ -193,8 +187,7 @@ class TaskService : Service() {
         stopTimer()
         hasTaskProcess = false
         return TaskProcessRecord(
-            startTime = startTime,
-            endTime = runningTime.toLong()
+            startTime = startTime, endTime = runningTime.toLong()
         )
     }
 }

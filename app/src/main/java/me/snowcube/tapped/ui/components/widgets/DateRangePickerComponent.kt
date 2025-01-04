@@ -101,7 +101,7 @@ fun DatePickerComponent(
 
                     showDatePicker = false
                 }) {
-                    Text("OK")
+                    Text("OK", fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
@@ -109,7 +109,7 @@ fun DatePickerComponent(
                     onDismiss()
                     showDatePicker = false
                 }) {
-                    Text("Cancel")
+                    Text("Cancel", fontWeight = FontWeight.Bold)
                 }
             },
             shape = MaterialTheme.shapes.large

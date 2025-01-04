@@ -389,6 +389,7 @@ private fun SettingItemMore(
         Text(
             info,
             style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Normal,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier.width(10.dp))

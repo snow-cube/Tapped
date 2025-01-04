@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -212,14 +213,17 @@ private fun TaskItem(
     onTaskItemClick: (taskId: Long) -> Unit, task: Task
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(5.dp)
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Surface(
             color = if (task.isCompleted) MaterialTheme.colorScheme.surfaceDim else StateColor.entries[(task.id % 4).toInt()].color,
             shape = MaterialTheme.shapes.small,
             modifier = Modifier
-                .width(6.dp)
-//                .width(54.dp)
+//                .width(6.dp)
+//                .width(50.dp)
+//                .height(50.dp)
+                .width(54.dp)
                 .height(54.dp)
         ) { }
         Surface(

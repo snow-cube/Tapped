@@ -8,6 +8,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
@@ -65,6 +66,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -263,6 +265,7 @@ private fun NonContinuousTaskPanel(
 //                            text = "TERMINATE",
 //                            text = "FINISH",
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     letterSpacing = 2.sp,
                     modifier = Modifier
                         .padding(horizontal = 10.dp)
@@ -332,12 +335,14 @@ private fun ContinuousTaskPanel(
                     Text(
                         taskStateText,
                         style = MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold,
                         color = Color.White,
                     )
                     AnimatedVisibility(isRelatedTaskHasProcess) {
                         Text(
                             formattedTime,
                             style = MaterialTheme.typography.displayLarge,
+                            fontFamily = FontFamily.Monospace,
                             color = Color.White,
                             fontWeight = FontWeight.Bold,
                             modifier = Modifier.padding(top = 15.dp)
@@ -428,6 +433,7 @@ private fun ContinuousTaskPanel(
                         else "终止"
                     } else "开始",
                     style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
                     letterSpacing = 2.sp,
                     modifier = Modifier.padding(horizontal = 10.dp)
                 )
@@ -462,7 +468,8 @@ private fun TaskPanelBase(
 
     val majorInfoHeightFraction: Float by animateFloatAsState(
         if (visible) .75f else 1f,
-        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+//        animationSpec = spring(stiffness = Spring.StiffnessMediumLow),
+        animationSpec = tween(400), // 修复采用 spring 导致的最后动画会跳动一下的问题
         label = "majorInfoHeightFraction"
     )
 
@@ -583,7 +590,8 @@ private fun TaskPanelBase(
                     }
                     .fillMaxWidth()
                     .fillMaxHeight(fraction = 0.25f)
-                    .windowInsetsPadding(WindowInsets.navigationBars)) {
+                    .windowInsetsPadding(WindowInsets.navigationBars)
+            ) {
                 AnimatedVisibility(
                     visible, enter = fadeIn(
                         animationSpec = spring(
@@ -638,12 +646,14 @@ private fun TaskProgressIndicator(
         modifier = modifier
             .height(60.dp)
             .width(200.dp)
-            .clickable(onClick = {})
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
-            modifier = modifier.padding(4.dp)
+            modifier = modifier
+//                .clip(RoundedCornerShape(500.dp))
+                .clickable(onClick = {})
+                .padding(4.dp)
         ) {
             Surface(
                 color = iconSurfaceColor,

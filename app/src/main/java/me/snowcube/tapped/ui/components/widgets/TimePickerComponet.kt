@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.vectorResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -188,9 +189,9 @@ fun TimePickerDialog(
                 ) {
                     toggle()
                     Spacer(modifier = modifier.weight(1f))
-                    TextButton(onClick = onClear) { Text("Clear") }
-                    TextButton(onClick = onDismiss) { Text("Cancel") }
-                    TextButton(onClick = onConfirm) { Text("OK") }
+                    TextButton(onClick = onClear) { Text("Clear", fontWeight = FontWeight.Bold) }
+                    TextButton(onClick = onDismiss) { Text("Cancel", fontWeight = FontWeight.Bold) }
+                    TextButton(onClick = onConfirm) { Text("OK", fontWeight = FontWeight.Bold) }
                 }
             }
         }
