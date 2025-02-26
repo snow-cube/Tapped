@@ -79,7 +79,6 @@ fun TappedAppHome(
     onBottomTaskControllerClick: (taskId: Long) -> Unit,
     tappedUiState: TappedUiState,
     onCloseWritingClick: () -> Unit,
-    snackbarLauncher: SnackbarLauncher? = null,
     viewModel: TappedAppHomeViewModel = hiltViewModel()
 ) {
 
@@ -263,7 +262,7 @@ fun TappedAppHome(
                         editTaskUiState = viewModel.editTaskUiState,
                         updateEditTaskUiState = viewModel::updateEditTaskUiState,
                         saveTask = viewModel::saveTask,
-                        snackbarLauncher = snackbarLauncher,
+//                        snackbarLauncher = snackbarLauncher,
                         modifier = Modifier.safeDrawingPadding()
                     )
                 }

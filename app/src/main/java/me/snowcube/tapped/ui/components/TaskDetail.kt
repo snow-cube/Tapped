@@ -82,6 +82,7 @@ import me.snowcube.tapped.models.TappedUiState
 import me.snowcube.tapped.models.TaskDetailUiState
 import me.snowcube.tapped.models.TaskDetailViewModel
 import me.snowcube.tapped.models.TaskProcessRecord
+import me.snowcube.tapped.ui.components.widgets.SnackbarController
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
 import me.snowcube.tapped.ui.utils.DisposableEffectWithLifecycle
@@ -143,7 +144,6 @@ fun TaskDetail(
     ) -> Unit, // 将任务打卡一次
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
-    snackbarLauncher: SnackbarLauncher? = null,
     tappedUiState: TappedUiState,
     viewModel: TaskDetailViewModel = hiltViewModel(),
 ) {
@@ -196,7 +196,6 @@ fun TaskDetail(
                             tappedUiState = tappedUiState,
                             taskDetailUiState = uiState,
                             navigateBack = navigateBack,
-                            snackbarLauncher = snackbarLauncher,
                             onStartNewTask = onStartNewTask,
                             onPauseTask = onPauseTask,
                             onContinueTask = onContinueTask,
@@ -208,7 +207,6 @@ fun TaskDetail(
                         NonContinuousTaskPanel(
                             uiState = uiState,
                             navigateBack = navigateBack,
-                            snackbarLauncher = snackbarLauncher,
                             performTaskOnce = performTaskOnce
                         )
                     }
@@ -226,12 +224,10 @@ fun TaskDetail(
 private fun NonContinuousTaskPanel(
     uiState: TaskDetailUiState,
     navigateBack: () -> Unit,
-    snackbarLauncher: SnackbarLauncher? = null,
     performTaskOnce: (Long, TaskProcessRecord?) -> Unit
 ) {
     TaskPanelBase(taskDetailUiState = uiState,
         navigateBack = navigateBack,
-        snackbarLauncher = snackbarLauncher,
         backgroundColor = MaterialTheme.colorScheme.surface,
         foregroundColor = MaterialTheme.colorScheme.onSurface,
         elevationColor = MaterialTheme.colorScheme.surfaceBright,
@@ -280,7 +276,6 @@ private fun ContinuousTaskPanel(
     tappedUiState: TappedUiState,
     taskDetailUiState: TaskDetailUiState,
     navigateBack: () -> Unit,
-    snackbarLauncher: SnackbarLauncher? = null,
     onStartNewTask: (Task) -> Unit,
     onPauseTask: () -> Unit,
     onContinueTask: () -> Unit,
@@ -311,7 +306,6 @@ private fun ContinuousTaskPanel(
 
     TaskPanelBase(taskDetailUiState = taskDetailUiState,
         navigateBack = navigateBack,
-        snackbarLauncher = snackbarLauncher,
         backgroundColor = stateColor,
         foregroundColor = Color.White,
         elevationColor = Color(0x2AFFFFFF),
@@ -446,7 +440,6 @@ private fun ContinuousTaskPanel(
 private fun TaskPanelBase(
     taskDetailUiState: TaskDetailUiState,
     navigateBack: () -> Unit,
-    snackbarLauncher: SnackbarLauncher? = null,
     backgroundColor: Color,
     foregroundColor: Color,
     elevationColor: Color,
@@ -458,6 +451,8 @@ private fun TaskPanelBase(
     majorInfoContent: @Composable (ColumnScope.() -> Unit),
     controllerBarContent: @Composable (RowScope.() -> Unit),
 ) {
+    val controller = SnackbarController.current
+
     val interactionSource = remember { MutableInteractionSource() }
 //    var launched by remember {
 //        mutableStateOf(false)
@@ -564,7 +559,7 @@ private fun TaskPanelBase(
 
                     IconButton(
                         onClick = {
-                            snackbarLauncher?.launch(
+                            controller.showMessage(
                                 "更多按钮尚未实现",
                                 actionLabel = "好的",
                                 withDismissAction = true

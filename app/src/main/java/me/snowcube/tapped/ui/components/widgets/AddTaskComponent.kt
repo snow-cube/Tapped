@@ -62,10 +62,8 @@ import me.snowcube.tapped.models.EditTaskUiState
 import me.snowcube.tapped.models.NfcWritingState
 import me.snowcube.tapped.models.TaskDetailsUiState
 import me.snowcube.tapped.models.inNfcManner
-import me.snowcube.tapped.ui.components.SnackbarLauncher
 import me.snowcube.tapped.ui.theme.TappedTheme
 import me.snowcube.tapped.ui.theme.paletteColor
-import me.snowcube.tapped.ui.theme.shapes
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -78,13 +76,14 @@ fun AddTaskComponent(
     nfcWritingState: NfcWritingState,
     editTaskUiState: EditTaskUiState,
     updateEditTaskUiState: (TaskDetailsUiState) -> Unit,
-    snackbarLauncher: SnackbarLauncher? = null,
 ) {
 
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
     var showRepetitionConfig by remember { mutableStateOf(false) }
+
+    val controller = SnackbarController.current
 
     Column(
         verticalArrangement = Arrangement.SpaceBetween, modifier = modifier
@@ -141,13 +140,13 @@ fun AddTaskComponent(
                             coroutineScope.launch {
                                 val taskId = saveTask()
                                 if (taskId == -1L) {
-                                    snackbarLauncher?.launch("保存失败")
+                                    controller.showMessage("保存失败")
                                     return@launch
                                 }
 //                            sleep(5000)
                                 if (editTaskUiState.taskDetails.inNfcManner()) {
                                     if (!writeTaskToNfc(taskId)) {
-                                        snackbarLauncher?.launch("写入错误")
+                                        controller.showMessage("写入错误")
 
                                         // TODO: 处理写入识别的情况 如删除已插入的任务
 
@@ -291,7 +290,9 @@ fun AddTaskComponent(
                 )
                 SettingItemMore(
                     label = "更多设置",
-                    onClick = { snackbarLauncher?.launch("Not implemented") },
+                    onClick = {
+                        controller.showMessage("Not implemented")
+                    },
                     modifier = modifier.height(44.dp)
                 )
             }
